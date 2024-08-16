@@ -20,7 +20,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Valibool\\TelegramConstruct\\Providers\\TelegramConstructServiceProvider"
+                "Valibool\\TelegramConstruct\\Providers\\TelegramConstructServiceProvider",
+                "Valibool\\TelegramConstruct\\Providers\\TelegramConstructEventServiceProvider"
             ]
         }
     }
