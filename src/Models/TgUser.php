@@ -4,7 +4,7 @@ namespace Valibool\TelegramConstruct\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class UserTgSettings extends Model
+class TgUser extends Model
 {
     protected $fillable = [
         'user_id',

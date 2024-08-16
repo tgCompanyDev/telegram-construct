@@ -4,6 +4,7 @@ namespace Valibool\TelegramConstruct\Services\Object;
 
 use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Models\Message;
+use Valibool\TelegramConstruct\Models\TgUser;
 use Valibool\TelegramConstruct\Models\User;
 use Valibool\TelegramConstruct\Services\Output;
 use Valibool\TelegramConstruct\Services\ValidationService;
@@ -22,7 +23,7 @@ class InputMessage
 
     public function initUser()
     {
-        $this->user = User::where('tg_user_id', $this->from['id'])->firstOrCreate([
+        $this->user = TgUser::where('tg_user_id', $this->from['id'])->firstOrCreate([
             'tg_user_id' => $this->from['id'],
             'tg_user_name' => $this->from['username'] ?? null,
             'name' => $this->from['username'] ?? 'noname [' . $this->from['id'] . ']',
