@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('tg_users', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('user_id')->nullable(false);
+            $table->unsignedInteger('user_id')->nullable();
             $table->foreign('user_id')
                 ->references('id')
                 ->on('users')
