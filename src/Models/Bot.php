@@ -23,5 +23,14 @@ class Bot extends Model
         'secret_token'=>'string',
 
     ];
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+    public function firstMessage()
+    {
+        return $this->hasOne(Message::class)->where('first_message', true);
+    }
 }
 
