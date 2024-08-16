@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('users_confirmations', function (Blueprint $table) {
             $table->id();
             $table->string('input')->nullable();
-            $table->unsignedInteger('user_id')->nullable();
-            $table->foreign('user_id')
+            $table->unsignedInteger('tg_user_id')->nullable();
+            $table->foreign('tg_user_id')
                 ->references('id')
-                ->on('users')
+                ->on('tg_users')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->timestamps();

@@ -3,10 +3,10 @@
 namespace Valibool\TelegramConstruct\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\Telegram\Input;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Valibool\TelegramConstruct\Models\Bot;
+use Valibool\TelegramConstruct\Services\Input;
 
 class TelegramConstructController extends Controller
 {
