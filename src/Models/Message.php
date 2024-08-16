@@ -39,6 +39,14 @@ class Message extends Model
         return $this->belongsTo(Message::class, 'id', 'next_message_id');
     }
 
+    public function keyboard()
+    {
+        return $this->hasOne(Keyboard::class);
+    }
+    public function buttons()
+    {
+        return $this->hasManyThrough(Button::class,Keyboard::class)->orderBy('id');
+    }
     public function canSendNextMessage() : bool
     {
         if($this->buttons->count() || $this->keyboard->model_class || !$this->nextMessage || $this->need_confirmation){
