@@ -13,6 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tg_users', function (Blueprint $table) {
+            $table->id();
             $table->unsignedInteger('user_id')->nullable(false);
             $table->foreign('user_id')
                 ->references('id')
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->unsignedBigInteger('phone')->nullable();
             $table->unsignedBigInteger('tg_user_id')->unique()->nullable();
             $table->string('tg_user_name')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -33,7 +35,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users_tg_settings');
+        Schema::dropIfExists('tg_users');
     }
 
 };
