@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->jsonb('permissions')->nullable();
-        });
+//        Schema::table('users', function (Blueprint $table) {
+//            $table->jsonb('permissions')->nullable();
+//        });
         User::create([
             'name' => 'admin',
             'email' => 'admin@admin.com',
