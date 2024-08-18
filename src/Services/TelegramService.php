@@ -8,9 +8,14 @@ use Valibool\TelegramConstruct\Models\User;
 
 class TelegramService
 {
-    public static function createStartDefaultMessage(Bot $bot)
+
+    /**
+     * @param Bot $bot
+     * @return Message
+     */
+    public static function createStartDefaultMessage(Bot $bot) : Message
     {
-        Message::create([
+       return Message::create([
             'bot_id' => $bot->id,
             'name' => 'Стартовое сообщение',
             'text' => 'Добро пожаловать',

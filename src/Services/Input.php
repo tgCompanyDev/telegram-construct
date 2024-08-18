@@ -4,6 +4,7 @@ namespace Valibool\TelegramConstruct\Services;
 
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
+use Telegram\Bot\Objects\Update;
 use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Services\Object\InputCallbackQuery;
 use Valibool\TelegramConstruct\Services\Object\InputMessage;
@@ -12,6 +13,9 @@ class Input
 {
     private Api $telegram;
     private Bot $bot;
+    private InputMessage|InputCallbackQuery|null $object;
+    private Update $updates;
+
 
     /**
      * @throws TelegramSDKException
@@ -23,21 +27,33 @@ class Input
         $this->updates = $this->telegram->getWebhookUpdate();
     }
 
-    public function start()
+    /**
+     * @return void
+     * @throws TelegramSDKException
+     */
+    public function start(): void
     {
-        $this->checkInputObject();
-        $this->object->getAnswer();
+        $this->setInputObject();
+        if ($this->object) {
+            $this->object->generateAnswer();
+            $this->object->sendAnswer();
+        }
     }
 
-    public function checkInputObject()
+    /**
+     * @return void
+     */
+    public function setInputObject(): void
     {
-        switch ($this->updates->objectType()){
+        switch ($this->updates->objectType()) {
             case 'callback_query':
                 $this->object = new InputCallbackQuery($this->telegram, $this->updates, $this->bot);
                 break;
             case 'message':
                 $this->object = new InputMessage($this->telegram, $this->updates, $this->bot);
                 break;
+            default:
+                $this->object = null;
         }
     }
 }

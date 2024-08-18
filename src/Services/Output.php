@@ -2,99 +2,226 @@
 
 namespace Valibool\TelegramConstruct\Services;
 
+use Illuminate\Support\Facades\Storage;
+use Orchid\Attachment\Models\Attachment;
+use Telegram\Bot\Api;
+use Telegram\Bot\Exceptions\TelegramSDKException;
+use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard as SDKKeyboard;
-use Valibool\TelegramConstruct\Models\Keyboard;
-use Valibool\TelegramConstruct\Models\Message;
+use Telegram\Bot\Objects\Message;
 
 class Output
 {
-    public static function sendMessage($telegram, $message, $keyboard, $chatId)
+
+    public SDKKeyboard $keyboard;
+    public Api $client;
+    public string $messageText;
+    public string $chatId;
+    private ?Attachment $photo = null;
+
+
+    public function setKeyboard(SDKKeyboard $keyboard): SDKKeyboard
     {
-        return $telegram->sendMessage([
-            'chat_id' => $chatId,
-            'text' => $message,
-            'reply_markup' => $keyboard
+        return $this->keyboard = $keyboard;
+    }
+
+    /**
+     * @param Api $client
+     * @return Api
+     */
+    public function setClient(Api $client): Api
+    {
+        return $this->client = $client;
+    }
+
+    /**
+     * @param string $messageText
+     * @return string
+     */
+    public function setMessageText(string $messageText)
+    {
+        return $this->messageText = $messageText;
+    }
+
+    /**
+     * @param string $chatId
+     * @return string
+     */
+    public function setChatId(string $chatId): string
+    {
+        return $this->chatId = $chatId;
+    }
+
+    public function setPhoto(Attachment $photo): string
+    {
+        return $this->photo = $photo;
+    }
+
+    /**
+     * @return Message
+     * @throws TelegramSDKException
+     */
+    public function sendMessage(): Message
+    {
+
+        if ($this->photo) {
+            return $this->sendPhoto();
+        } else {
+            return $this->sendTextMessage();
+        }
+    }
+
+    /**
+     * @return Message
+     * @throws TelegramSDKException
+     */
+    public function sendTextMessage(): Message
+    {
+        return $this->client->sendMessage([
+            'chat_id' => $this->chatId,
+            'text' => $this->messageText,
+            'reply_markup' => $this->keyboard
         ]);
     }
 
-//    public static function editMessageText($telegram, $message, $keyboard, $chatId)
+    /**
+     * @return Message
+     * @throws TelegramSDKException
+     */
+    public function sendPhoto(): Message
+    {
+        $file = InputFile::create(Storage::getConfig()['root'] . '/' . $this->photo->disk . '/' . $this->photo->physicalPath(), $this->photo->name);
+
+        return $this->client->sendPhoto([
+            'chat_id' => $this->chatId,
+            'photo' => $file,
+            'caption' => $this->messageText,
+            'reply_markup' => $this->keyboard
+        ]);
+    }
+
+
+//    public static function sendMessage($telegram, $text, $keyboard, $chatId): mixed
 //    {
-//        return $telegram->editMessageText([
+//        return $telegram->sendMessage([
 //            'chat_id' => $chatId,
-//            'text' => $message,
+//            'text' => $text,
 //            'reply_markup' => $keyboard
 //        ]);
 //    }
 
-    public static function renderInlineKeyboardByMessage(Message $message)
-    {
-        $keyboard = false;
-        if($message->buttons){
-            $buttons = [];
-            $keyboard = new SDKKeyboard(['resize_keyboard' => $message->keyboard->resize_keyboard, 'one_time_keyboard' => $message->keyboard->one_time_keyboard]);
-            $keyboard->inline();
-            foreach ($message->buttons as $button) {
-                if (isset($button['callback_data'])) {
-                    $buttons[] = SDKKeyboard::inlineButton(['text' => $button['text'], 'callback_data' => $button['callback_data']]);
-                }
-            }
-            $keyboard->row($buttons);
-        }
-//        if($message->keyboard->isDynamic()){
-//            $model = $message->keyboard->connectedModel()->all();
-//            $connectedModelParams = TelegramService::ModelsForDialogButtons();
-//            $modelKeyToTextButton = $connectedModelParams[$message->keyboard->model_class]['keyToNameButton'];
+//    public static function sendPhoto($telegram, $text, $keyboard, $chatId, $photo): mixed
+//    {
+//        $file = InputFile::create(Storage::getConfig()['root'].'/'.$photo->disk.'/'.$photo->physicalPath(),$photo->name);
+//
+//        return $telegram->sendPhoto([
+//            'chat_id' => $chatId,
+//            'photo' => $file,
+//            'caption' => $text,
+//            'reply_markup' => $keyboard
+//        ]);
+//    }
+
+//    public static function editMessageText($telegram, $text, $keyboard, $chatId, $messageId)
+//    {
+//        return $telegram->editMessageText([
+//            'chat_id' => $chatId,
+//            'message_id' => $messageId,
+//            'text' => $text,
+//            'reply_markup' => $keyboard
+//        ]);
+//    }
+//
+//    public static function editMessageCaption($telegram, $text, $keyboard, $chatId, $messageId)
+//    {
+//        return $telegram->editMessageCaption([
+//            'chat_id' => $chatId,
+//            'message_id' => $messageId,
+//            'caption' => $text,
+//            'reply_markup' => $keyboard
+//        ]);
+//    }
+//
+//    public static function deleteMessage($telegram, $chatId, $messageId)
+//    {
+//        return $telegram->deleteMessage([
+//            'chat_id' => $chatId,
+//            'message_id' => $messageId,
+//        ]);
+//    }
+
+//    public static function renderInlineKeyboardByMessage(Message $message): bool|SDKKeyboard
+//    {
+//        $keyboard = false;
+//        if($message->buttons){
 //            $buttons = [];
-//            $keyboard = new Keyboard(['resize_keyboard' => $message->keyboard->resize_keyboard, 'one_time_keyboard' => $message->keyboard->one_time_keyboard]);
+//            $keyboard = new SDKKeyboard(['resize_keyboard' => $message->keyboard->resize_keyboard, 'one_time_keyboard' => $message->keyboard->one_time_keyboard]);
+//            $keyboard->inline();
+//            foreach ($message->buttons as $button) {
+//                if (isset($button['callback_data'])) {
+//                    $buttons[] = SDKKeyboard::inlineButton(['text' => $button['text'], 'callback_data' => $button['callback_data']]);
+//                }
+//            }
+//            $keyboard->row($buttons);
+//        }
+////        if($message->keyboard->isDynamic()){
+////            $model = $message->keyboard->connectedModel()->all();
+////            $connectedModelParams = TelegramService::ModelsForDialogButtons();
+////            $modelKeyToTextButton = $connectedModelParams[$message->keyboard->model_class]['keyToNameButton'];
+////            $buttons = [];
+////            $keyboard = new Keyboard(['resize_keyboard' => $message->keyboard->resize_keyboard, 'one_time_keyboard' => $message->keyboard->one_time_keyboard]);
+////            $keyboard->inline();
+////            foreach ($model as $item) {
+////                $buttons[] = Keyboard::inlineButton([
+////                    'text' => $item->{$modelKeyToTextButton},
+////                    'callback_data' => $item->id]);
+////            }
+////            $keyboard->row($buttons);
+////        }
+//        return $keyboard;
+//    }
+
+
+//    public static function renderInlineKeyboardByDynamicKeyboard(Keyboard $keyboardMessage, $filter = false): bool|SDKKeyboard
+//    {
+//        $keyboard = false;
+//        if($keyboardMessage->isDynamic()){
+//            $model = $keyboardMessage->connectedModel();
+//
+//            if($filter){
+//                $model = $model->where($filter['key'], $filter['value'])->get();
+//            } else {
+//                $model = $model->all();
+//            }
+//
+//            $connectedModelParams = TelegramService::ModelsForDialogButtons();
+//            $modelKeyToTextButton = $connectedModelParams[$keyboardMessage->model_class]['keyToNameButton'];
+//            $buttons = [];
+//            $keyboard = new SDKKeyboard(['resize_keyboard' => $keyboardMessage->resize_keyboard, 'one_time_keyboard' => $keyboardMessage->one_time_keyboard]);
 //            $keyboard->inline();
 //            foreach ($model as $item) {
-//                $buttons[] = Keyboard::inlineButton([
+//                $buttons[] = SDKKeyboard::inlineButton([
 //                    'text' => $item->{$modelKeyToTextButton},
 //                    'callback_data' => $item->id]);
 //            }
 //            $keyboard->row($buttons);
 //        }
-        return $keyboard;
-    }
-    public static function renderInlineKeyboardByDynamicKeyboard(Keyboard $keyboardMessage, $filter = false)
-    {
-        $keyboard = false;
-        if($keyboardMessage->isDynamic()){
-            $model = $keyboardMessage->connectedModel();
+//        return $keyboard;
+//    }
 
-            if($filter){
-                $model = $model->where($filter['key'], $filter['value'])->get();
-            } else {
-                $model = $model->all();
-            }
-
-            $connectedModelParams = TelegramService::ModelsForDialogButtons();
-            $modelKeyToTextButton = $connectedModelParams[$keyboardMessage->model_class]['keyToNameButton'];
-            $buttons = [];
-            $keyboard = new SDKKeyboard(['resize_keyboard' => $keyboardMessage->resize_keyboard, 'one_time_keyboard' => $keyboardMessage->one_time_keyboard]);
-            $keyboard->inline();
-            foreach ($model as $item) {
-                $buttons[] = SDKKeyboard::inlineButton([
-                    'text' => $item->{$modelKeyToTextButton},
-                    'callback_data' => $item->id]);
-            }
-            $keyboard->row($buttons);
-        }
-        return $keyboard;
-    }
-    public static function renderInlineKeyboardCustom($customButtons)
-    {
-        $buttons = [];
-        $keyboard = new SDKKeyboard(['resize_keyboard' => true, 'one_time_keyboard' => true]);
-        $keyboard->inline();
-        foreach ($customButtons as $button) {
-            if (isset($button['callback_data'])) {
-                $buttons[] = SDKKeyboard::inlineButton(['text' => $button['text'], 'callback_data' => $button['callback_data']]);
-            }
-        }
-
-        $keyboard->row($buttons);
-
-        return $keyboard;
-    }
+//    public static function renderInlineKeyboardCustom($customButtons): SDKKeyboard
+//    {
+//        $buttons = [];
+//        $keyboard = new SDKKeyboard(['resize_keyboard' => true, 'one_time_keyboard' => true]);
+//        $keyboard->inline();
+//        foreach ($customButtons as $button) {
+//            if (isset($button['callback_data'])) {
+//                $buttons[] = SDKKeyboard::inlineButton(['text' => $button['text'], 'callback_data' => $button['callback_data']]);
+//            }
+//        }
+//
+//        $keyboard->row($buttons);
+//
+//        return $keyboard;
+//    }
 }

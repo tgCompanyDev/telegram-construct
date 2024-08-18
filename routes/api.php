@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Valibool\TelegramConstruct\Http\Controllers\MessageController;
 use Valibool\TelegramConstruct\Http\Controllers\TelegramConstructController;
 
 /*
@@ -13,6 +14,8 @@ use Valibool\TelegramConstruct\Http\Controllers\TelegramConstructController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
 Route::post('/telegram-input', [TelegramConstructController::class, 'input']);
 
+Route::prefix('api/tg-construct/')->group(function () {
+    Route::apiResource('message', MessageController::class);
+});

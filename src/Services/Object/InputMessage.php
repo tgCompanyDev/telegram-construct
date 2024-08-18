@@ -2,16 +2,30 @@
 
 namespace Valibool\TelegramConstruct\Services\Object;
 
+use Telegram\Bot\Api;
+use Telegram\Bot\Keyboard\Keyboard as SDKKeyboard;
+use Telegram\Bot\Objects\Update;
 use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Models\Message;
 use Valibool\TelegramConstruct\Models\TgUser;
-use Valibool\TelegramConstruct\Models\User;
+use Valibool\TelegramConstruct\Services\MessageConstructService;
 use Valibool\TelegramConstruct\Services\Output;
+use Valibool\TelegramConstruct\Services\TgUserService;
 use Valibool\TelegramConstruct\Services\ValidationService;
 
 class InputMessage
 {
-    public function __construct($telegram, $inputMessage, Bot $bot)
+    private TgUser $user;
+    private Api $telegram;
+    private Bot $bot;
+    private ?Message $firstMessage;
+    private mixed $from;
+    private Update $inputMessage;
+    private ValidationService $validationService;
+    private SDKKeyboard|bool $keyboard;
+    public MessageConstructService $messageService;
+
+    public function __construct(Api $telegram, Update $inputMessage, Bot $bot)
     {
         $this->telegram = $telegram;
         $this->bot = $bot;
@@ -19,55 +33,75 @@ class InputMessage
         $this->from = $inputMessage->message['from'];
         $this->inputMessage = $inputMessage;
         $this->validationService = new ValidationService($telegram);
+        $this->setUser();
     }
 
-    public function initUser()
+    /**
+     * @return Output
+     */
+    public function generateAnswer(): Output
     {
-        $this->user = TgUser::where('tg_user_id', $this->from['id'])->firstOrCreate([
-            'tg_user_id' => $this->from['id'],
-            'tg_user_name' => $this->from['username'] ?? null,
-            'name' => $this->from['username'] ?? 'noname [' . $this->from['id'] . ']',
-        ]);
-    }
-
-    public function getAnswer()
-    {
-        $this->initUser();
-        return $this->generateAnswer();
-    }
-
-    public function generateAnswer()
-    {
-        if ($this->user->mustAnswer()) {
-            $this->validateInput();
+        if($this->user->lastQuestion){
+            $outputMessage = $this->user->lastQuestion;
         } else {
-            return $this->sendMessage($this->firstMessage);
+            $outputMessage = $this->firstMessage;
         }
+        $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot, );
+        return $this->messageService->setOutputMessage($outputMessage);
+
+
+//        if ($this->user->mustAnswer()) {
+//            $this->validateInput();
+//        } else {
+//            return $this->sendMessage($this->firstMessage);
+//            return $this->firstMessage;
+//        }
     }
 
-    public function sendNextMessage()
+    /**
+     * @return \Telegram\Bot\Objects\Message
+     * @throws \Telegram\Bot\Exceptions\TelegramSDKException
+     */
+    public function sendAnswer(): \Telegram\Bot\Objects\Message
     {
-        if($nextMessage = Message::find($this->user->last_message_id)->nextMessage){
-            return $this->sendMessage($nextMessage);
+        $answer = $this->messageService->sendMessage();
+        $this->user->saveLastMessage($this->messageService->outputMessage, $answer->message_id);
+
+        if ($this->messageService->outputMessage->canSendNextMessage()) {
+            if($nextMessageSent = $this->sendNextMessage()){
+                $answer = $nextMessageSent;
+            }
+        }
+        return $answer;
+    }
+
+    /**
+     * @return void
+     */
+    protected function setUser(): void
+    {
+        $this->user = TgUserService::initUser($this->from);
+    }
+
+
+    /**
+     * @return \Telegram\Bot\Objects\Message|null
+     * @throws \Telegram\Bot\Exceptions\TelegramSDKException
+     */
+    public function sendNextMessage(): ?\Telegram\Bot\Objects\Message
+    {
+        if($this->user->last_message_id){
+            if($nextMessage = Message::find($this->user->last_message_id)->nextMessage){
+                $this->messageService->setOutputMessage($nextMessage);
+                return $this->sendAnswer();
+            }
         }
         return null;
     }
 
-    public function sendMessage(Message $message)
-    {
-
-        $keyboard = Output::renderInlineKeyboardByMessage($message);
-        $answer = Output::sendMessage($this->telegram, $message->text, $keyboard, $this->from['id']);
-        $this->user->last_message_id = $message->id;
-        $this->user->last_tg_message_id = $answer->message_id;
-        $this->user->save();
-        if ($message->canSendNextMessage()) {
-            $answer = $this->sendNextMessage();
-        }
-
-        return $answer;
-    }
-
+    /**
+     * @return Message|null
+     */
     private function getFirstMessage(): Message|null
     {
         return Message::where('first_message', true)->where('bot_id',$this->bot->id)->first();

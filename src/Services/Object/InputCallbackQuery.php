@@ -2,13 +2,26 @@
 
 namespace Valibool\TelegramConstruct\Services\Object;
 
+use Telegram\Bot\Exceptions\TelegramSDKException;
+use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Models\Message;
-use Valibool\TelegramConstruct\Models\User;
+use Valibool\TelegramConstruct\Models\TgUser;
+use Valibool\TelegramConstruct\Services\MessageConstructService;
 use Valibool\TelegramConstruct\Services\Output;
+use Valibool\TelegramConstruct\Services\TgUserService;
 use Valibool\TelegramConstruct\Services\ValidationService;
 
 class InputCallbackQuery
 {
+    private mixed $telegram;
+    private Bot $bot;
+    private mixed $pressedButton;
+    private mixed $from;
+    private ValidationService $validationService;
+    private ?Message $constructMessage;
+    private TgUser $user;
+    private MessageConstructService $messageService;
+
     public function __construct($telegram, $inputCallbackQuery, Bot $bot)
     {
         $this->telegram = $telegram;
@@ -16,36 +29,49 @@ class InputCallbackQuery
         $this->pressedButton = $inputCallbackQuery->callback_query['data'];
         $this->from = $inputCallbackQuery->callback_query['from'];
         $this->validationService = new ValidationService($this->telegram);
+        $this->setUser();
 
     }
 
-    public function initUser(): void
+
+    /**
+     * @return void
+     */
+    public function generateAnswer()
     {
-        $this->user = User::where('tg_user_id', $this->from['id'])->firstOrCreate([
-            'tg_user_id' => $this->from['id'],
-            'tg_user_name' => $this->from['username'] ?? null,
-            'name' => $this->from['username'] ?? 'noname [' . $this->from['id'] . ']',
-        ]);
+       return $this->parsePressedButton();
+
     }
 
-    public function getAnswer(): void
+    /**
+     * @throws TelegramSDKException
+     */
+    public function sendAnswer(): \Telegram\Bot\Objects\Message
     {
-        $this->initUser();
-        $this->parsePressedButton();
-//        if ($this->constructMessage) {
-//            $keyboard = Output::renderInlineKeyboardByMessage($this->constructMessage);
-//            $answer = Output::sendMessage($this->telegram, $this->constructMessage->text, $keyboard, $this->from['id']);
-//            $this->user->last_message_id = $this->constructMessage->id;
-//            $this->user->last_tg_message_id = $answer->message_id;
-//            $this->user->save();
-//        }
+        $answer = $this->messageService->sendMessage();
+        $this->user->saveLastMessage($this->messageService->outputMessage, $answer->message_id);
+
+        return $answer;
+    }
+    /**
+     * @return void
+     */
+    public function setUser()
+    {
+        $this->user = TgUserService::initUser($this->from);
     }
 
+    /**
+     * @return Message|null
+     */
     private function getMessageByPressedButton(): Message|null
     {
         return Message::find($this->pressedButton);
     }
 
+    /**
+     * @return void
+     */
     private function parsePressedButton(): void
     {
         if (str_contains($this->pressedButton, 'confirmation')) {
@@ -54,46 +80,66 @@ class InputCallbackQuery
                 $this->constructMessage = $this->user->lastQuestion->nextMessage;
             }
         } else {
-//            $this->constructMessage = $this->getMessageByPressedButton();
             $this->checkMessage();
         }
     }
 
-    private function checkMessage()
+    /**
+     * @return Output
+     */
+    private function checkMessage(): Output
     {
         $this->message = $this->user->lastQuestion;
 
         switch ($this->message->type){
-            case 'modelMessage':
-
-                if($this->message->nextMessage->type == 'modelMessage'){
-
-                    $nowModelClass = $this->message->keyboard->model_class;
-
-                    $modelNextMessage = app($this->message->nextMessage->keyboard->model_class);
-
-                    if (isset($modelNextMessage::$filterFieldsForTgButtons)){
-                        $relationKey = $modelNextMessage::$filterFieldsForTgButtons[$nowModelClass];
-                        $filter = [
-                            'key' =>$relationKey,
-                            'value' =>$this->pressedButton,
-                        ];
-                        $keyboard = Output::renderInlineKeyboardByDynamicKeyboard($this->message->nextMessage->keyboard, $filter);
-                        $answer = Output::sendMessage($this->telegram, $this->message->nextMessage->text, $keyboard, $this->from['id']);
-                        $this->user->last_message_id = $this->message->id;
-                        $this->user->last_tg_message_id = $answer->message_id;
-                        $this->user->save();
-                    }
-                }
-                break;
+//            case 'modelMessage':
+//
+//                if($this->message->nextMessage->type == 'modelMessage'){
+//
+//                    $nowModelClass = $this->message->keyboard->model_class;
+//
+//                    $modelNextMessage = app($this->message->nextMessage->keyboard->model_class);
+//
+//                    if (isset($modelNextMessage::$filterFieldsForTgButtons)){
+//                        $relationKey = $modelNextMessage::$filterFieldsForTgButtons[$nowModelClass];
+//                        $filter = [
+//                            'key' =>$relationKey,
+//                            'value' =>$this->pressedButton,
+//                        ];
+//                        $keyboard = Output::renderInlineKeyboardByDynamicKeyboard($this->message->nextMessage->keyboard, $filter);
+//                        $answer = Output::sendMessage($this->telegram, $this->message->nextMessage->text, $keyboard, $this->from['id']);
+//                        $this->user->last_message_id = $this->message->id;
+//                        $this->user->last_tg_message_id = $answer->message_id;
+//                        $this->user->save();
+//                    }
+//                }
+//                break;
 
             case 'message':
-                $this->constructMessage = $this->getMessageByPressedButton();
-                $keyboard = Output::renderInlineKeyboardByMessage($this->constructMessage);
-                $answer = Output::sendMessage($this->telegram, $this->constructMessage->text, $keyboard, $this->from['id']);
-                $this->user->last_message_id = $this->constructMessage->id;
-                $this->user->last_tg_message_id = $answer->message_id;
-                $this->user->save();
+                $outputMessage = $this->getMessageByPressedButton();
+
+                $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot, );
+                return $this->messageService->setOutputMessage($outputMessage);
+//                $this->constructMessage = $this->getMessageByPressedButton();
+//                $keyboard = Output::renderInlineKeyboardByMessage($this->constructMessage);
+//                if(!$this->user->last_tg_message_id){
+//                    $answer = Output::sendMessage($this->telegram, $this->constructMessage->text, $keyboard, $this->from['id']);
+////                    $answer = Output::sendMessage($this->telegram, $this->constructMessage->text, $keyboard, '-1002198941062');
+//                } else {
+//                    $message = $this->user->lastQuestion;
+//                    if($message->image) {
+//                        if($this->constructMessage->image){
+//                            $answer = Output::editMessageCaption($this->telegram, $this->constructMessage->text, $keyboard, $this->from['id'],$this->user->last_tg_message_id);
+//                        } else {
+//                            Output::deleteMessage($this->telegram, $this->from['id'], $this->user->last_tg_message_id);
+//                            $answer = Output::sendMessage($this->telegram, $this->constructMessage->text, $keyboard, $this->from['id']);
+//                        }
+//                    } else {
+//                        $answer = Output::editMessageText($this->telegram, $this->constructMessage->text, $keyboard, $this->from['id'],$this->user->last_tg_message_id);
+//
+//                    }
+//                }
+//                $this->user->saveLastMessage($this->constructMessage->id, $answer->message_id);
                 break;
         }
     }
