@@ -14,6 +14,7 @@ class TelegramConstructController extends Controller
 
     public function input(Request $request)
     {
+
         Log::debug(json_encode($request->all(), JSON_PRETTY_PRINT));
         if ($request->header('X-Telegram-Bot-Api-Secret-Token')) {
             if ($bot = Bot::where('secret_token', $request->header('X-Telegram-Bot-Api-Secret-Token'))->first()) {
@@ -24,4 +25,7 @@ class TelegramConstructController extends Controller
         return 'ok';
     }
 
+    public function test(){
+        return "здорова ебать";
+    }
 }

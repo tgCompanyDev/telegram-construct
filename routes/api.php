@@ -15,6 +15,7 @@ use Valibool\TelegramConstruct\Http\Controllers\TelegramConstructController;
 |
 */
 Route::post('/telegram-input', [TelegramConstructController::class, 'input']);
+Route::get('/test', [TelegramConstructController::class, 'test']);
 
 Route::prefix('api/tg-construct/')->group(function () {
     Route::apiResource('message', MessageController::class);

@@ -18,7 +18,6 @@ class InputCallbackQuery
     private mixed $pressedButton;
     private mixed $from;
     private ValidationService $validationService;
-    private ?Message $constructMessage;
     private TgUser $user;
     private MessageConstructService $messageService;
 
@@ -30,17 +29,14 @@ class InputCallbackQuery
         $this->from = $inputCallbackQuery->callback_query['from'];
         $this->validationService = new ValidationService($this->telegram);
         $this->setUser();
-
     }
 
-
     /**
-     * @return void
+     * @return Output
      */
-    public function generateAnswer()
+    public function generateAnswer(): Output
     {
-       return $this->parsePressedButton();
-
+        return $this->parsePressedButton();
     }
 
     /**
@@ -53,10 +49,11 @@ class InputCallbackQuery
 
         return $answer;
     }
+
     /**
      * @return void
      */
-    public function setUser()
+    public function setUser(): void
     {
         $this->user = TgUserService::initUser($this->from);
     }
@@ -70,18 +67,18 @@ class InputCallbackQuery
     }
 
     /**
-     * @return void
+     * @return Output
      */
-    private function parsePressedButton(): void
+    private function parsePressedButton(): Output
     {
-        if (str_contains($this->pressedButton, 'confirmation')) {
-            if (explode('_', $this->pressedButton)[1]) {
-                $this->validationService->confirmLastMessage($this->user);
-                $this->constructMessage = $this->user->lastQuestion->nextMessage;
-            }
-        } else {
-            $this->checkMessage();
-        }
+//        if (str_contains($this->pressedButton, 'confirmation')) {
+//            if (explode('_', $this->pressedButton)[1]) {
+//                $this->validationService->confirmLastMessage($this->user);
+//                $this->constructMessage = $this->user->lastQuestion->nextMessage;
+//            }
+//        } else {
+        return $this->checkMessage();
+//        }
     }
 
     /**
@@ -91,7 +88,7 @@ class InputCallbackQuery
     {
         $this->message = $this->user->lastQuestion;
 
-        switch ($this->message->type){
+        switch ($this->message->type) {
 //            case 'modelMessage':
 //
 //                if($this->message->nextMessage->type == 'modelMessage'){
@@ -118,7 +115,7 @@ class InputCallbackQuery
             case 'message':
                 $outputMessage = $this->getMessageByPressedButton();
 
-                $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot, );
+                $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot,);
                 return $this->messageService->setOutputMessage($outputMessage);
 //                $this->constructMessage = $this->getMessageByPressedButton();
 //                $keyboard = Output::renderInlineKeyboardByMessage($this->constructMessage);

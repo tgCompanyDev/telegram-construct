@@ -14,12 +14,16 @@ return new class extends Migration
         Schema::create('channel_posts', function (Blueprint $table) {
             $table->id();
             $table->string('message_tg_id');
-            $table->string('title');
-            $table->string('username')->nullable();
             $table->unsignedInteger('post_id');
-            $table->foreign('')
+            $table->foreign('post_id')
                 ->references('id')
-                ->on('bots')
+                ->on('posts')
+                ->onDelete('cascade');
+            $table->unsignedInteger('channel_id')->nullable();
+            $table->foreign('channel_id')
+                ->references('id')
+                ->on('my_channels')
+                ->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->timestamps();
         });
