@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('user_name')->nullable();
             $table->string('webhook')->nullable();
             $table->jsonb('permissions')->nullable();
-            $table->mediumText('token');
+            $table->mediumText('token')->unique();
             $table->unsignedInteger('user_id');
             $table->foreign('user_id')
                 ->references('id')

@@ -2,9 +2,12 @@
 
 namespace Valibool\TelegramConstruct\Services;
 
+use Telegram\Bot\Api;
+use Valibool\TelegramConstruct\Models\Bot;
+
 class TelegramCommands
 {
-    public static function setWebhook($telegram, $url, $bot)
+    public static function setWebhook(Api $telegram, $url, Bot $bot)
     {
         $params = [
             'allowed_updates' => [

@@ -41,12 +41,12 @@ class InputMessage
      */
     public function generateAnswer(): Output
     {
-        if($this->user->lastQuestion){
+        if($this->user->lastQuestion    ){
             $outputMessage = $this->user->lastQuestion;
         } else {
             $outputMessage = $this->firstMessage;
         }
-        $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot, );
+        $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot);
         return $this->messageService->setOutputMessage($outputMessage);
 
 
@@ -92,8 +92,10 @@ class InputMessage
     {
         if($this->user->last_message_id){
             if($nextMessage = Message::find($this->user->last_message_id)->nextMessage){
-                $this->messageService->setOutputMessage($nextMessage);
-                return $this->sendAnswer();
+                if($nextMessage->save_confirmation){
+                    $this->messageService->setOutputMessage($nextMessage);
+                    return $this->sendAnswer();
+                }
             }
         }
         return null;

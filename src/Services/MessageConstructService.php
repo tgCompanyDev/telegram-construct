@@ -197,4 +197,19 @@ class MessageConstructService
 
         return $this->output;
     }
+
+    /**
+     * @param Bot $bot
+     * @return Message
+     */
+    public static function createStartDefaultMessage(Bot $bot) : Message
+    {
+        return Message::create([
+            'bot_id' => $bot->id,
+            'name' => 'Стартовое сообщение',
+            'text' => 'Добро пожаловать',
+            'first_message' => true,
+            'save_confirmation' => true,
+        ]);
+    }
 }

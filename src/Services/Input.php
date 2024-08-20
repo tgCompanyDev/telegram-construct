@@ -2,7 +2,6 @@
 
 namespace Valibool\TelegramConstruct\Services;
 
-use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Objects\Update;
@@ -15,7 +14,7 @@ class Input
 {
     private Api $telegram;
     private Bot $bot;
-    private InputMessage|InputCallbackQuery|ChatMember|null $object;
+    private InputMessage|InputCallbackQuery|ChatMember|null $inputObject;
     private Update $updates;
 
 
@@ -40,28 +39,29 @@ class Input
 
     /**
      * @return void
+     * @throws TelegramSDKException
      */
     public function setInputObject(): void
     {
-
-        Log::debug($this->updates->objectType());
         switch ($this->updates->objectType()) {
             case 'callback_query':
-                $this->object = new InputCallbackQuery($this->telegram, $this->updates, $this->bot);
-                $this->object->generateAnswer();
-                $this->object->sendAnswer();
+                $this->inputObject = new InputCallbackQuery($this->telegram, $this->updates, $this->bot);
+                if($this->inputObject->generateAnswer()){
+                    $this->inputObject->sendAnswer();
+                }
                 break;
             case 'message':
-                $this->object = new InputMessage($this->telegram, $this->updates, $this->bot);
-                $this->object->generateAnswer();
-                $this->object->sendAnswer();
+                $this->inputObject = new InputMessage($this->telegram, $this->updates, $this->bot);
+                if($this->inputObject->generateAnswer()) {
+                    $this->inputObject->sendAnswer();
+                }
                 break;
             case 'my_chat_member':
-                $this->object = new ChatMember($this->telegram, $this->updates, $this->bot);
-                $this->object->checkChatMember();
+                $this->inputObject = new ChatMember($this->telegram, $this->updates, $this->bot);
+                $this->inputObject->checkChatMember();
                 break;
             default:
-                $this->object = null;
+                $this->inputObject = null;
         }
     }
 }

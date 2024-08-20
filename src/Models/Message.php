@@ -22,6 +22,7 @@ class Message extends Model
         'need_confirmation',
         'wait_input',
         'keyboard_id',
+        'save_confirmation',
     ];
 
     protected $casts = [
@@ -81,7 +82,7 @@ class Message extends Model
             return false;
         }
         return true;
-
     }
+
 }
 
