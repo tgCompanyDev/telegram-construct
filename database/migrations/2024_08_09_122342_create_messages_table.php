@@ -38,7 +38,7 @@ return new class extends Migration
             $table->unsignedInteger('attachment_id')->nullable();
             $table->foreign('attachment_id')
                 ->references('id')
-                ->on('attachments')
+                ->on('tg_construct_attachments')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->timestamps();

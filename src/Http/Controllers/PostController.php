@@ -23,6 +23,8 @@ class PostController extends Controller
             'text' => 'required|string',
             'type' => 'required|string',
             'bot_id' => 'required|exists:bots,id',
+            'attachment_id' => 'nullable|exists:tg_construct_attachments,id',
+
         ]);
         return $this->postApiService->store($validated);
     }
@@ -55,6 +57,8 @@ class PostController extends Controller
             'name' => 'required|string',
             'text' => 'required|string',
             'type' => 'required|string',
+            'attachment_id' => 'nullable|exists:tg_construct_attachments,id',
+
         ]);
         return $this->postApiService->update($post, $validated);
     }

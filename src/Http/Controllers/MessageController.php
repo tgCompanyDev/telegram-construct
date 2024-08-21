@@ -34,6 +34,8 @@ class MessageController extends Controller
             'type' => 'required|string',
             'name' => 'required|string',
             'bot_id' => 'required|exists:bots,id',
+            'attachment_id' => 'nullable|exists:tg_construct_attachments,id',
+
         ]);
         return $this->messageApiService->store($validated);
     }
@@ -56,6 +58,8 @@ class MessageController extends Controller
             'type' => 'required|string',
             'name' => 'required|string',
             'next_message_id' => 'nullable|exists:messages,id',
+            'attachment_id' => 'nullable|exists:tg_construct_attachments,id',
+
         ]);
         return $this->messageApiService->update($id, $validated);
     }

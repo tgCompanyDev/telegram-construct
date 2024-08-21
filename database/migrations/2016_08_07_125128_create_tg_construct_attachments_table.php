@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('attachments', function (Blueprint $table) {
+        Schema::create('tg_construct_attachments', function (Blueprint $table) {
             $table->increments('id');
             $table->text('name');
             $table->text('original_name');
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('attachmentable', function (Blueprint $table) {
+        Schema::create('tg_construct_attachmentable', function (Blueprint $table) {
             $table->increments('id');
             $table->string('attachmentable_type');
             $table->unsignedInteger('attachmentable_id');
@@ -39,7 +39,7 @@ return new class extends Migration
 
             $table->foreign('attachment_id')
                 ->references('id')
-                ->on('attachments')
+                ->on('tg_construct_attachments')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
         });
@@ -50,7 +50,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::drop('attachmentable');
-        Schema::drop('attachments');
+        Schema::drop('tg_construct_attachmentable');
+        Schema::drop('tg_construct_attachments');
     }
 };

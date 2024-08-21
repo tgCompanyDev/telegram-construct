@@ -6,6 +6,7 @@ use Valibool\TelegramConstruct\Http\Controllers\MessageController;
 use Valibool\TelegramConstruct\Http\Controllers\PostController;
 use Valibool\TelegramConstruct\Http\Controllers\TelegramConstructController;
 use Valibool\TelegramConstruct\Http\Controllers\TelegramServerClientController;
+use Valibool\TelegramConstruct\Http\Controllers\UploadFileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,9 @@ Route::prefix('api/tg-construct/')->group(function () {
     Route::post('message/confirm-save-all', [MessageController::class, 'confirmSaveAll']);
 
     Route::apiResource('post', PostController::class);
+
+    Route::post('upload-image', [UploadFileController::class, 'loadImage']);
+
 
 });
 

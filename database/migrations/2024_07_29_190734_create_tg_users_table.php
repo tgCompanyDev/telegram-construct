@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +14,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tg_users', function (Blueprint $table) {
+            User::create([
+                'name' => 'admin',
+                'email' => 'admin@admin.com',
+                'password' => Hash::make('password'),
+            ]);
             $table->id();
             $table->unsignedInteger('user_id')->nullable();
             $table->foreign('user_id')
