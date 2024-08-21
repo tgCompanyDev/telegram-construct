@@ -2,6 +2,8 @@
 
 namespace Valibool\TelegramConstruct\Observers;
 
+use Valibool\TelegramConstruct\Models\Bot;
+use Valibool\TelegramConstruct\Models\Button;
 use Valibool\TelegramConstruct\Models\Keyboard;
 use Valibool\TelegramConstruct\Models\Message;
 
@@ -23,10 +25,10 @@ class MessageObserver
      */
     public function updated(Message $message): void
     {
-        if(($message->type != "modelMessage") && ($message->keyboard->model_class)){
-            $message->keyboard->model_class = null;
-            $message->keyboard->save();
-        }
+//        if(($message->type != "modelMessage") && ($message->keyboard->model_class)){
+//            $message->keyboard->model_class = null;
+//            $message->keyboard->save();
+//        }
     }
 
     /**
@@ -34,7 +36,13 @@ class MessageObserver
      */
     public function deleted(Message $message): void
     {
-        //
+        $bot = Bot::find($message->bot_id);
+        foreach ($bot->messages as $message) {
+
+        }
+        dd($bot->messages);
+//        $buttons = Button::where()
+//        dd($message);
     }
 
     /**

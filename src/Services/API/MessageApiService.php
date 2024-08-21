@@ -15,7 +15,7 @@ class MessageApiService
      */
     public function showAll(): JsonResponse
     {
-        $messages = Message::all();
+        $messages = Message::all()->sortBy('id');
         if ($messages) {
             return ResponseService::success(
                 MessageResource::collection($messages)
@@ -99,6 +99,17 @@ class MessageApiService
                 }
             }
             return ResponseService::success(MessageResource::collection($bot->messages));
+        }
+        return ResponseService::notFound();
+    }
+
+    public function destroy(string $messageId)
+    {
+        if($message = Message::find($messageId)){
+            if($message->delete()){
+                return ResponseService::success();
+            }
+            return ResponseService::unSuccess();
         }
         return ResponseService::notFound();
     }

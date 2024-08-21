@@ -5,12 +5,13 @@ namespace Valibool\TelegramConstruct\Services\Object;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
 use Valibool\TelegramConstruct\Models\Bot;
-use Valibool\TelegramConstruct\Services\ChannelsService;
+use Valibool\TelegramConstruct\Models\MyChannel;
+use Valibool\TelegramConstruct\Services\ChatMemberService;
 use Valibool\TelegramConstruct\Services\TgUserService;
 
 class ChatMember
 {
-    private ChannelsService $channelService;
+//    private ChatMemberService $chatMemberService;
     private Api $telegram;
     private Bot $bot;
     private mixed $myChatMember;
@@ -18,7 +19,7 @@ class ChatMember
 
     public function __construct(Api $telegram, Update $myChatMember, Bot $bot)
     {
-        $this->channelService = new ChannelsService();
+//        $this->chatMemberService = new ChatMemberService();
         $this->telegram = $telegram;
         $this->bot = $bot;
         $this->myChatMember = $myChatMember->my_chat_member;
@@ -26,12 +27,18 @@ class ChatMember
         $this->setUser();
     }
 
+    /**
+     * @return void
+     */
     public function setUser(): void
     {
         $this->user = TgUserService::initUser($this->from);
     }
 
-    public function checkChatMember()
+    /**
+     * @return void
+     */
+    public function checkChatMember(): void
     {
         if(
             $this->myChatMember['old_chat_member']['status'] == 'left' &&
@@ -47,14 +54,21 @@ class ChatMember
             $this->botLeftChannelAdmin();
         }
     }
-    private function botStandChannelAdmin()
+
+    /**
+     * @return MyChannel
+     */
+    private function botStandChannelAdmin(): MyChannel
     {
-        $channel = $this->bot->standChannelAdmin($this->myChatMember);
+        return $this->bot->standChannelAdmin($this->myChatMember);
 
     }
-    private function botLeftChannelAdmin()
-    {
-        $deleted = $this->bot->leftChannelAdmin($this->myChatMember);
 
+    /**
+     * @return bool
+     */
+    private function botLeftChannelAdmin(): bool
+    {
+        return $this->bot->leftChannelAdmin($this->myChatMember);
     }
 }

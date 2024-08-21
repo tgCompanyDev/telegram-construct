@@ -65,7 +65,8 @@ class MessageController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        return $this->messageApiService->destroy($id);
+
     }
 
     /**

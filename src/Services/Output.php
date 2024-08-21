@@ -63,7 +63,6 @@ class Output
      */
     public function sendMessage(): Message
     {
-
         if ($this->photo) {
             return $this->sendPhoto();
         } else {

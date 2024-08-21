@@ -3,7 +3,7 @@
 namespace Valibool\TelegramConstruct\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Valibool\TelegramConstruct\Services\ChannelsService;
+use Valibool\TelegramConstruct\Services\ChatMemberService;
 
 class Bot extends Model
 {
@@ -29,6 +29,11 @@ class Bot extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    public function channels()
+    {
+        return $this->hasMany(MyChannel::class);
+    }
     public function firstMessage()
     {
         return $this->hasOne(Message::class)->where('first_message', true);
@@ -36,11 +41,11 @@ class Bot extends Model
 
     public function standChannelAdmin($myChatMember)
     {
-       return ChannelsService::createChannel($this->id, $myChatMember);
+       return ChatMemberService::standChannelAdmin($this->id, $myChatMember);
     }
     public function leftChannelAdmin($myChatMember)
     {
-       return ChannelsService::leftChannelAdmin($this->id, $myChatMember);
+       return ChatMemberService::leftChannelAdmin($this->id, $myChatMember);
     }
 }
 

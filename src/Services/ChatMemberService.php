@@ -4,15 +4,14 @@ namespace Valibool\TelegramConstruct\Services;
 
 use Valibool\TelegramConstruct\Models\MyChannel;
 
-class ChannelsService
+class ChatMemberService
 {
-
     /**
      * @param $botId
      * @param $myChatMember
      * @return MyChannel
      */
-    public static function createChannel($botId, $myChatMember): MyChannel
+    public static function standChannelAdmin($botId, $myChatMember): MyChannel
     {
         return MyChannel::create([
             'channel_tg_id' => $myChatMember['chat']['id'],
