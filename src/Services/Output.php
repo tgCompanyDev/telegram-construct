@@ -3,12 +3,12 @@
 namespace Valibool\TelegramConstruct\Services;
 
 use Illuminate\Support\Facades\Storage;
-use Orchid\Attachment\Models\Attachment;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard as SDKKeyboard;
 use Telegram\Bot\Objects\Message;
+use Valibool\TelegramConstruct\Models\File\TgConstructAttachment;
 
 class Output
 {
@@ -17,7 +17,7 @@ class Output
     public Api $client;
     public string $messageText;
     public string $chatId;
-    private ?Attachment $photo = null;
+    private ?TgConstructAttachment $photo = null;
 
 
     public function setKeyboard(SDKKeyboard $keyboard): SDKKeyboard
@@ -52,7 +52,7 @@ class Output
         return $this->chatId = $chatId;
     }
 
-    public function setPhoto(Attachment $photo): string
+    public function setPhoto(TgConstructAttachment $photo): string
     {
         return $this->photo = $photo;
     }
