@@ -13,12 +13,12 @@ use Illuminate\Routing\Controller as BaseController;
  *      description="Документация Botamba",
  * )
  * @OA\Server(
+ *       url="https://api.botamba.ru/",
+ *       description="prod",
+ *  )
+ * @OA\Server(
  *      url="http://smm-planer.loc",
  *      description="lockal",
- * )
- * @OA\Server(
- *      url="https://api.botamba.ru/",
- *      description="prod",
  * )
  * @OA\SecurityScheme(
  *      type="apiKey",
