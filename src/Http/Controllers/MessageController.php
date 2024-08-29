@@ -114,7 +114,7 @@ class MessageController extends Controller
     /**
      * Update message.
      * @OA\Put(
-     *             path="/api/tg-construct/message/{messaage_id}",
+     *             path="/api/tg-construct/message/{message_id}",
      *             operationId="message/update",
      *             tags={"Сообщения"},
      *             description="Изменения Сообщения",
@@ -123,7 +123,7 @@ class MessageController extends Controller
      *              },
      *     @OA\Parameter(
      *            name="messaage_id",
-     *            description="messaage_id",
+     *            description="message_id",
      *            required=true,
      *            in="path",
      *             @OA\Schema(
@@ -201,7 +201,7 @@ class MessageController extends Controller
     /**
      * Remove message.
      * @OA\Delete(
-     *              path="/api/tg-construct/message/{messaage_id}",
+     *              path="/api/tg-construct/message/{message_id}",
      *              operationId="message/delete",
      *              tags={"Сообщения"},
      *              description="Удаление Сообщения",
@@ -209,8 +209,8 @@ class MessageController extends Controller
      *                {"apiKey": {}},
      *               },
      *      @OA\Parameter(
-     *             name="messaage_id",
-     *             description="messaage_id",
+     *             name="message_id",
+     *             description="message_id",
      *             required=true,
      *             in="path",
      *              @OA\Schema(
