@@ -11,4 +11,7 @@
 
 ## Add to config/l5-swagger.php documentations/default/annotations
    - base_path('packages/telegram-construct/src/Http'),
+   - base_path('packages/telegram-construct/src/Http') - for local package
+   - base_path('vendor/valibool/telegram-construct/src/Http')- for composer package
+
 
