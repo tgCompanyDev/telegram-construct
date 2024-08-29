@@ -11,33 +11,27 @@ class ResponseService
 {
 
     /**
-     * @param $status
-     * @param $code
      * @param $errors
      * @param $data
      * @return array
      */
-    private static function responsePrams($status, $code, $errors = [], $data = [])
+    private static function responsePrams($errors = [], $data = [])
     {
         return [
-            'status' => $status,
-            'code' => $code,
             'errors' => (object)$errors,
             'data' => (object)$data,
         ];
     }
 
     /**
-     * @param $status
-     * @param $code
      * @param $errors
      * @param $data
      * @return \Illuminate\Http\JsonResponse
      */
-    public static function sendJsonResponse($status, $code = Response::HTTP_OK, $errors = [], $data = [])
+    public static function sendJsonResponse($code = Response::HTTP_OK, $errors = [], $data = [])
     {
         return response()->json(
-            self::responsePrams($status, $code, $errors, $data),
+            self::responsePrams($errors, $data),
             $code
         );
     }
@@ -48,7 +42,7 @@ class ResponseService
      */
     public static function success($data = [])
     {
-        return self::sendJsonResponse(true, Response::HTTP_OK, [], $data);
+        return self::sendJsonResponse(Response::HTTP_OK, [], $data);
     }
 
     /**
@@ -57,7 +51,7 @@ class ResponseService
      */
     public static function unSuccess($data = [])
     {
-        return self::sendJsonResponse(false, Response::HTTP_OK, [], $data);
+        return self::sendJsonResponse(Response::HTTP_NO_CONTENT, [], $data);
     }
 
     /**
@@ -66,7 +60,7 @@ class ResponseService
      */
     public static function сreated($data = [])
     {
-        return self::sendJsonResponse(true, Response::HTTP_CREATED, [], $data);
+        return self::sendJsonResponse(Response::HTTP_CREATED, [], $data);
     }
 
     /**
@@ -75,7 +69,7 @@ class ResponseService
      */
     public static function badRequest($data = [])
     {
-        return self::sendJsonResponse(false, Response::HTTP_BAD_REQUEST, $data, []);
+        return self::sendJsonResponse(Response::HTTP_BAD_REQUEST, $data, []);
     }
 
     /**
@@ -84,7 +78,7 @@ class ResponseService
      */
     public static function unauthorized($data = [])
     {
-        return self::sendJsonResponse(false, Response::HTTP_UNAUTHORIZED, $data, []);
+        return self::sendJsonResponse( Response::HTTP_UNAUTHORIZED, $data, []);
     }
 
     /**
@@ -93,7 +87,7 @@ class ResponseService
      */
     public static function forbidden($data = [])
     {
-        return self::sendJsonResponse(false, Response::HTTP_FORBIDDEN, $data, []);
+        return self::sendJsonResponse( Response::HTTP_FORBIDDEN, $data, []);
     }
 
     /**
@@ -102,7 +96,7 @@ class ResponseService
      */
     public static function notFound($data = [])
     {
-        return self::sendJsonResponse(false, Response::HTTP_NOT_FOUND, $data, []);
+        return self::sendJsonResponse( Response::HTTP_NOT_FOUND, $data, []);
     }
 
     /**
@@ -111,6 +105,6 @@ class ResponseService
      */
     public static function unprocessableContent($data = [])
     {
-        return self::sendJsonResponse(false, 422, [], $data);
+        return self::sendJsonResponse( 422, [], $data);
     }
 }

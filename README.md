@@ -5,3 +5,10 @@
 
    - "repositories": [ { "type" : "path", "url" : "packages/telegram-construct" } ]
 ## For access bots webhook must be write request header X-Telegram-Bot-Api-Secret-Token as secret_token 
+
+## Publish Swagger config 
+    - php artisan vendor:publish --provider "L5Swagger\L5SwaggerServiceProvider"
+
+## Add to config/l5-swagger.php documentations/default/annotations
+   - base_path('packages/telegram-construct/src/Http'),
+

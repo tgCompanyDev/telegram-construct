@@ -46,6 +46,10 @@ class MessageApiService
     public function store($messageParams): JsonResponse
     {
         $newMessage = Message::create($messageParams);
+        if(isset($messageParams['buttons'])){
+            $keyboard = $newMessage->keyboard;
+            $keyboard->buttons()->sync($messageParams['buttons']);
+        }
         return ResponseService::success(
             new MessageResource($newMessage)
         );
@@ -79,7 +83,11 @@ class MessageApiService
     public function update(string $messageId, array $validated): JsonResponse
     {
         $message = Message::findOrFail($messageId);
-        if ($message && $updated = $message->update($validated)) {
+        if ($message && $message->update($validated)) {
+            if(isset($validated['buttons'])){
+                $keyboard = $message->keyboard;
+                $keyboard->buttons()->sync($validated['buttons']);
+            }
             return ResponseService::success(new MessageResource($message));
         }
         return ResponseService::notFound();

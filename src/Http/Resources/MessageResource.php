@@ -21,6 +21,7 @@ class MessageResource extends JsonResource
             "need_confirmation" => $this->need_confirmation,
             "next_message_id" => $this->next_message_id,
             "image" => $this->image? $this->image->url : null,
+            "attachment_id" => $this->attachment_id,
             "buttons" => MessageButtonsResource::collection($this->buttons),
         ];
     }

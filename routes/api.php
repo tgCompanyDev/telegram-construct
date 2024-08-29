@@ -34,7 +34,6 @@ Route::prefix('api/tg-construct/')->group(function () {
 
     Route::post('upload-image', [UploadFileController::class, 'loadImage']);
 
-
 });
 
 Route::prefix('api/tg-server-client/')->group(function () {

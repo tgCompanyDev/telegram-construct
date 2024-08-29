@@ -36,13 +36,11 @@ class MessageObserver
      */
     public function deleted(Message $message): void
     {
-        $bot = Bot::find($message->bot_id);
-        foreach ($bot->messages as $message) {
-
+        $buttonsOnDeletedMessages = Button::where('callback_data', $message->id)->get();
+        foreach ($buttonsOnDeletedMessages as $button){
+            $button->callback_data = null;
+            $button->save();
         }
-        dd($bot->messages);
-//        $buttons = Button::where()
-//        dd($message);
     }
 
     /**

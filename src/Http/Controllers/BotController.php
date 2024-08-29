@@ -2,14 +2,10 @@
 
 namespace Valibool\TelegramConstruct\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Exceptions\TelegramSDKException;
-use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Services\API\BotApiService;
-use Valibool\TelegramConstruct\Services\Input;
 
 
 class BotController extends Controller
