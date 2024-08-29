@@ -122,7 +122,7 @@ class MessageController extends Controller
      *               {"apiKey": {}},
      *              },
      *     @OA\Parameter(
-     *            name="messaage_id",
+     *            name="message_id",
      *            description="message_id",
      *            required=true,
      *            in="path",
