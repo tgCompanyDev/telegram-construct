@@ -18,7 +18,7 @@ use Illuminate\Routing\Controller as BaseController;
  *  )
  * @OA\Server(
  *      url="http://smm-planer.loc",
- *      description="lockal",
+ *      description="local",
  * )
  * @OA\SecurityScheme(
  *      type="apiKey",
