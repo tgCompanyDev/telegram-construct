@@ -2,7 +2,7 @@
     "name": "valibool/telegram-construct",
     "description": "Telegram bot construct",
     "type": "library",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
             "Valibool\\TelegramConstruct\\": "src/"
