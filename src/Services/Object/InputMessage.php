@@ -92,10 +92,8 @@ class InputMessage
     {
         if($this->user->last_message_id){
             if($nextMessage = Message::find($this->user->last_message_id)->nextMessage){
-                if($nextMessage->save_confirmation){
-                    $this->messageService->setOutputMessage($nextMessage);
-                    return $this->sendAnswer();
-                }
+                $this->messageService->setOutputMessage($nextMessage);
+                return $this->sendAnswer();
             }
         }
         return null;

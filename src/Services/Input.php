@@ -47,6 +47,7 @@ class Input
             case 'callback_query':
                 $this->inputObject = new InputCallbackQuery($this->telegram, $this->updates, $this->bot);
                 if($this->inputObject->generateAnswer()){
+                    $this->inputObject->deletePrevMessage();
                     $this->inputObject->sendAnswer();
                 }
                 break;

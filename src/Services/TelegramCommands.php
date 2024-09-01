@@ -7,7 +7,7 @@ use Valibool\TelegramConstruct\Models\Bot;
 
 class TelegramCommands
 {
-    public static function setWebhook(Api $telegram, $url, Bot $bot)
+    public static function setWebhook(Api $telegram, string $url, Bot $bot)
     {
         $params = [
             'allowed_updates' => [
@@ -39,7 +39,7 @@ class TelegramCommands
         return $webhook;
     }
 
-    public static function getWebhookInfo($telegram){
+    public static function getWebhookInfo(Api $telegram){
         return $telegram->getWebhookInfo();
     }
 }

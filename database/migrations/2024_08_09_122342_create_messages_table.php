@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->mediumText('text')->nullable();
-            $table->boolean('save_confirmation')->default(false);
             $table->string('type')->default('message');
             $table->string('name')->nullable();
 //            $table->boolean('resize_keyboard')->default(true);

@@ -83,6 +83,15 @@ class Output
         ]);
     }
 
+
+    public function deleteMessage($messageId)
+    {
+        return $this->client->deleteMessage([
+            'chat_id' => $this->chatId,
+            'message_id' => $messageId,
+        ]);
+    }
+
     /**
      * @return Message
      * @throws TelegramSDKException
@@ -141,13 +150,7 @@ class Output
 //        ]);
 //    }
 //
-//    public static function deleteMessage($telegram, $chatId, $messageId)
-//    {
-//        return $telegram->deleteMessage([
-//            'chat_id' => $chatId,
-//            'message_id' => $messageId,
-//        ]);
-//    }
+
 
 //    public static function renderInlineKeyboardByMessage(Message $message): bool|SDKKeyboard
 //    {

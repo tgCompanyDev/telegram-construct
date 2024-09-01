@@ -56,26 +56,6 @@ class MessageApiService
     }
 
     /**
-     * @param int $messageId
-     * @param array $validated
-     * @return JsonResponse
-     */
-    public function syncButtons(int $messageId, array $validated): JsonResponse
-    {
-        $message = Message::find($messageId);
-        if ($message && $message->keyboard) {
-            $keyboard = $message->keyboard;
-            if ($keyboard->buttons()->sync($validated['buttons'])) {
-                if ($message->next_message_id)
-                    $message->next_message_id = null;
-                $message->save();
-                return ResponseService::success(new MessageResource($message));
-            }
-        }
-        return ResponseService::notFound();
-    }
-
-    /**
      * @param string $messageId
      * @param array $validated
      * @return JsonResponse
@@ -94,24 +74,10 @@ class MessageApiService
     }
 
     /**
-     * @param int $botId
+     * @param string $messageId
      * @return JsonResponse
      */
-    public function confirmSaveAll(int $botId): JsonResponse
-    {
-        if($bot = Bot::find($botId)){
-            foreach ($bot->messages as $message) {
-                if(!$message->save_confirmation){
-                    $message->save_confirmation = true;
-                    $message->save();
-                }
-            }
-            return ResponseService::success(MessageResource::collection($bot->messages));
-        }
-        return ResponseService::notFound();
-    }
-
-    public function destroy(string $messageId)
+    public function destroy(string $messageId): JsonResponse
     {
         if($message = Message::find($messageId)){
             if($message->delete()){

@@ -233,28 +233,4 @@ class MessageController extends Controller
         return $this->messageApiService->destroy($id);
 
     }
-
-    /**
-     * @param int $message_id
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function syncButtons(int $message_id, Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'buttons'=>'array|nullable',
-            'buttons.*.text'=>'required|string',
-            'buttons.*.callback_data'=>'required|exists:messages,id',
-        ]);
-
-        return $this->messageApiService->syncButtons($message_id, $validated);
-    }
-    public function confirmSaveAll(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'bot_id' => 'required|exists:bots,id',
-        ]);
-
-        return $this->messageApiService->confirmSaveAll($validated['bot_id']);
-    }
 }

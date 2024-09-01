@@ -14,6 +14,7 @@ class MessageConstructService
     private string $chatId;
     public Message $outputMessage;
     private Bot $bot;
+    private string $lastTgMessageId;
 
     public function __construct(
         Api    $telegram,
@@ -199,6 +200,22 @@ class MessageConstructService
     }
 
     /**
+     * @param string $messageTgId
+     * @return string
+     */
+    public function setLastTgMessageId(string $messageTgId): string
+    {
+        return $this->lastTgMessageId = $messageTgId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function deleteMessage(): bool
+    {
+       return $this->output->deleteMessage($this->lastTgMessageId);
+    }
+    /**
      * @param Bot $bot
      * @return Message
      */
@@ -209,7 +226,6 @@ class MessageConstructService
             'name' => 'Стартовое сообщение',
             'text' => 'Добро пожаловать',
             'first_message' => true,
-            'save_confirmation' => true,
         ]);
     }
 }

@@ -27,11 +27,7 @@ Route::prefix('api/bot/')->group(function () {
 
 Route::prefix('api/tg-construct/')->group(function () {
     Route::apiResource('message', MessageController::class);
-    Route::post('message/{message_id}/sync-buttons', [MessageController::class, 'syncButtons']);
-    Route::post('message/confirm-save-all', [MessageController::class, 'confirmSaveAll']);
-
     Route::apiResource('post', PostController::class);
-
     Route::post('upload-image', [UploadFileController::class, 'loadImage']);
 
 });

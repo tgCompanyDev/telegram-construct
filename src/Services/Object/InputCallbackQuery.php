@@ -20,6 +20,8 @@ class InputCallbackQuery
     private ValidationService $validationService;
     private TgUser $user;
     private MessageConstructService $messageService;
+    private mixed $lastMessage;
+    private string $lastTgMessageId;
 
     public function __construct($telegram, $inputCallbackQuery, Bot $bot)
     {
@@ -39,6 +41,13 @@ class InputCallbackQuery
         return $this->parsePressedButton();
     }
 
+    /**
+     * @return bool
+     */
+    public function deletePrevMessage(): bool
+    {
+        return $this->messageService->deleteMessage();
+    }
     /**
      * @throws TelegramSDKException
      */
@@ -63,8 +72,7 @@ class InputCallbackQuery
      */
     private function getMessageByPressedButton(): Message|null
     {
-        $message =  Message::find($this->pressedButton);
-        if ($message->save_confirmation){
+        if ($message =  Message::find($this->pressedButton)){
             return $message;
         }
         return null;
@@ -90,14 +98,16 @@ class InputCallbackQuery
      */
     private function checkMessage(): ?Output
     {
-        $this->message = $this->user->lastQuestion;
+        $this->lastMessage = $this->user->lastQuestion;
+        $this->lastTgMessageId = $this->user->last_tg_message_id;
 
-        switch ($this->message->type) {
+        switch ($this->lastMessage->type) {
 
             case 'message':
                 $outputMessage = $this->getMessageByPressedButton();
                 if($outputMessage){
                     $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot,);
+                    $this->messageService->setLastTgMessageId($this->lastTgMessageId);
                     return $this->messageService->setOutputMessage($outputMessage);
                 }
 
