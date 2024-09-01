@@ -12,7 +12,6 @@ class MessageResource extends JsonResource
     {
         return [
             "id" => $this->id,
-            "save_confirmation" => $this->save_confirmation,
             "name" => $this->name,
             "text" => $this->text,
             "type" => $this->type,
