@@ -8,7 +8,7 @@ class UsersConfirmation extends Model
 {
     protected $fillable = [
         'input',
-        'user_id'
+        'tg_user_id'
     ];
 
 }

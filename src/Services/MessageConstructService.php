@@ -48,8 +48,8 @@ class MessageConstructService
             $i=0;
 
             $keyboard = new SDKKeyboard([
-                'resize_keyboard' => $this->outputMessage->keyboard->resize_keyboard,
-                'one_time_keyboard' => $this->outputMessage->keyboard->one_time_keyboard
+                'resize_keyboard' => $this->outputMessage->keyboard->resize_keyboard ?? true,
+                'one_time_keyboard' => $this->outputMessage->keyboard->one_time_keyboard ?? true
             ]);
 
             $keyboard->inline();
@@ -215,6 +215,7 @@ class MessageConstructService
     {
        return $this->output->deleteMessage($this->lastTgMessageId);
     }
+
     /**
      * @param Bot $bot
      * @return Message

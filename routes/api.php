@@ -29,6 +29,7 @@ Route::prefix('api/tg-construct/')->group(function () {
     Route::apiResource('message', MessageController::class);
     Route::apiResource('post', PostController::class);
     Route::post('upload-image', [UploadFileController::class, 'loadImage']);
+    Route::get('allowed-users-inputs', [MessageController::class, 'getAllowedUsersInputs']);
 
 });
 

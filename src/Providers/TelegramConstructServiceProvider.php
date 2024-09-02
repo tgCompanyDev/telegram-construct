@@ -9,11 +9,9 @@ class TelegramConstructServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-
         $this->publishes([
-            __DIR__ . '/../config/telegram-construct.php' => config_path('telegram-construct.php'),
-        ], 'config');
-
+            __DIR__ . '/../../config/telegram-construct.php' => config_path('telegram-construct.php'),
+        ]);
 
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 

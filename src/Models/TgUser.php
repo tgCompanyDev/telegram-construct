@@ -18,6 +18,31 @@ class TgUser extends Model
         'tg_user_name',
     ];
 
+    public static string $modelName = "Клиенты";
+
+    /**
+     * Array for tgUsers question answer to save in DB
+     * @var array|array[]
+     */
+    public static array $fieldsToChangeByUser = [
+        'email' => [
+            "title" => "Емэйл",
+            'validator' => 'string|unique:tg_users|email|max:255',
+            'errorMessage' => 'Некорректный или уже существующий емэйл'
+        ],
+        'name' => [
+            "title" => "Имя и фамилия",
+            'validator' => 'string|max:255',
+            'errorMessage' => 'Максимальная длина 255 символов'
+
+        ],
+        'phone' => [
+            "title" => "Телефон",
+            'validator' => 'numeric|unique:tg_users',
+            'errorMessage' => 'Некорректный телефон/ телефон уже существует'
+        ],
+    ];
+
     /**
      * @return HasOne
      */

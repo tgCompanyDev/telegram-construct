@@ -13,13 +13,15 @@ class MessageApiService
     /**
      * @return JsonResponse
      */
-    public function showAll(): JsonResponse
+    public function showAll($botId): JsonResponse
     {
-        $messages = Message::all()->sortBy('id');
-        if ($messages) {
-            return ResponseService::success(
-                MessageResource::collection($messages)
-            );
+        if($bot = Bot::find($botId)){
+            if($bot->messages->count() > 0){
+                $messages = $bot->messages->sortBy('id');
+                return ResponseService::success(
+                    MessageResource::collection($messages)
+                );
+            }
         }
         return ResponseService::notFound();
     }
@@ -45,6 +47,9 @@ class MessageApiService
      */
     public function store($messageParams): JsonResponse
     {
+        if($messageParams['type'] == "question"){
+            $messageParams['need_confirmation'] = true;
+        }
         $newMessage = Message::create($messageParams);
         if(isset($messageParams['buttons'])){
             $keyboard = $newMessage->keyboard;
@@ -86,5 +91,10 @@ class MessageApiService
             return ResponseService::unSuccess();
         }
         return ResponseService::notFound();
+    }
+
+    public function getAllowedUsersInputs()
+    {
+
     }
 }

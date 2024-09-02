@@ -77,7 +77,7 @@ class Message extends Model
      */
     public function canSendNextMessage() : bool
     {
-        if($this->buttons->count() || $this->keyboard->model_class || !$this->nextMessage || $this->need_confirmation){
+        if($this->buttons->count() || !$this->nextMessage || $this->need_confirmation){
             return false;
         }
         return true;

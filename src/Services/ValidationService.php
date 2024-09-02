@@ -3,79 +3,136 @@
 namespace Valibool\TelegramConstruct\Services;
 
 use Illuminate\Support\Facades\Validator;
-use Valibool\TelegramConstruct\Models\User;
+
+use Valibool\TelegramConstruct\Models\Message;
+use Valibool\TelegramConstruct\Models\TgUser;
 use Valibool\TelegramConstruct\Models\UsersConfirmation;
+use Valibool\TelegramConstruct\Services\Response\ResponseService;
 
 class ValidationService
 {
-    private mixed $telegram;
+    private Message $errorMessage;
 
-    public function __construct($telegram)
+
+    public static function getAllowedUsersInputs()
     {
-        $this->telegram = $telegram;
-
+        $fieldsList = [];
+        $models = config('telegram-construct.models_to_users_inputs');
+        foreach ($models as $model => $modelClass) {
+            if (isset($modelClass::$fieldsToChangeByUser)) {
+                foreach ($modelClass::$fieldsToChangeByUser as $key => $params) {
+                    $fieldsList[$model . '_' . $key] = $modelClass::$modelName . ' [' . $params['title'] . ']';
+                }
+            }
+        }
+        if ($fieldsList)
+            return ResponseService::success($fieldsList);
+        return ResponseService::notFound();
     }
 
+    /**
+     * @param $inputMessageText
+     * @param $questionMessage
+     * @return bool
+     */
     public function validateAnswerTheQuestion($inputMessageText, $questionMessage): bool
     {
+        $configs = config('telegram-construct.models_to_users_inputs');
 
         $explode = explode('_', $questionMessage->wait_input);
-        $model = app($explode[0]);
+        $model = app($configs[$explode[0]]);
         $field = $explode[1];
-        $validationFieldsParams = $model->fieldsToUserInput();
-        $type = $validationFieldsParams[$field]['validate'];
 
-        $validator = Validator::make(['text' => $inputMessageText], [
-            'text' => $type,
-        ]);
-        return $validator->fails();
+        $validationFieldsParams = $model::$fieldsToChangeByUser;
+        $validatorParams = $validationFieldsParams[$field]['validator'];
+        $validatorMessage = $validationFieldsParams[$field]['errorMessage'];
+
+        $validator = Validator::make([$field => $inputMessageText], [
+            $field => $validatorParams,
+        ],
+            [
+                $field => $validatorMessage
+            ]);
+
+        if ($validatorFails = $validator->fails()) {
+            $validatorErrorMessages = $validator->messages();
+            $validatorErrorText = $validatorErrorMessages->first($field);
+
+            $this->errorMessage = new Message();
+            $this->errorMessage->text = $validatorErrorText;
+            $this->errorMessage->type = 'validation_error';
+
+        }
+
+        return $validatorFails;
     }
 
-    public function sendValidationMessage($chatId)
+    /**
+     * @param $inputMessageText
+     * @param $userId
+     * @return Message
+     */
+    public function getConfirmationMessage(string $inputMessageText, TgUser $user): Message
     {
-        $text = 'Неправильно введены данные';
-
-        return Output::sendMessage($this->telegram, $text, false, $chatId);
-    }
-
-    public function sendConfirmationMessage($inputMessageText, $chatId, $userId)
-    {
-//        $inputMessageText = $inputMessageText->getMessage()->text;
-        $text = 'Подтвердите введенные данные: ' . $inputMessageText;
+        $confirmationMessage = new Message();
+        $confirmationMessage->text = "Подтвердите ввод: ".$inputMessageText.". Или введите заново.";
+        $confirmationMessage->type = 'confirmation';
         $confirmationButtons = [
             [
-                'text' => 'Да',
+                'text' => 'Подтверждаю',
                 'callback_data' => 'confirmation_true',
             ],
             [
-                'text' => 'Нет',
-                'callback_data' => 'confirmation_false',
+                'text' => 'Пропустить',
+                'callback_data' => 'skip',
             ],
         ];
-        $keyboard = Output::renderInlineKeyboardCustom($confirmationButtons);
-        $sentConfirmation = Output::sendMessage($this->telegram, $text, $keyboard, $chatId);
-        UsersConfirmation::create([
-            'user_id' => $userId,
-            'input' => $inputMessageText,
-        ]);
-        return $sentConfirmation;
 
+        $confirmationMessage->buttons = $confirmationButtons;
+
+        if ($userConfirmations = UsersConfirmation::where('tg_user_id', $user->id)->first()) {
+            $userConfirmations->update([
+                'input' => $inputMessageText,
+            ]);
+        } else {
+            $userConfirmations = UsersConfirmation::create([
+                'tg_user_id' => $user->id,
+                'input' => $inputMessageText,
+            ]);
+        }
+
+        return $confirmationMessage;
     }
 
-    public function confirmLastMessage(User $user)
+    /**
+     * @return Message
+     */
+    public function getValidationErrorMessage(): Message
     {
-        $usersInput = $user->waitConfirmation->input;
-        $lastQuestion = $user->lastQuestion;
-        $confirmation = explode('_', $user->lastQuestion->wait_input);
+        return $this->errorMessage;
+    }
 
-        $model = app($confirmation[0]);
-        $field = $confirmation[1];
+    public function confirmLastMessage(TgUser $user)
+    {
+        if($user->waitConfirmation){
+            $usersInput = $user->waitConfirmation->input;
+            $confirmation = explode('_', $user->lastQuestion->wait_input);
+            $model = app(config('telegram-construct.models_to_users_inputs')[$confirmation[0]]);
+            $field = $confirmation[1];
 
-        if (get_class($model) == get_class($user)) {
-            $user->{$field} = $usersInput;
-            if ($user->save()) {
-                $user->waitConfirmation->delete();
+            if (get_class($model) == get_class($user)) {
+                $user->{$field} = $usersInput;
+                if ($user->save()) {
+                    $user->waitConfirmation->delete();
+                }
             }
+        }
+    }
+
+    public function skipLastMessage(TgUser $user)
+    {
+        if($user->waitConfirmation){
+            $user->waitConfirmation->delete();
         }
     }
 }

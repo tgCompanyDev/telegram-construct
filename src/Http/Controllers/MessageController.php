@@ -5,6 +5,7 @@ namespace Valibool\TelegramConstruct\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Valibool\TelegramConstruct\Services\API\MessageApiService;
+use Valibool\TelegramConstruct\Services\ValidationService;
 
 class MessageController extends Controller
 {
@@ -13,11 +14,40 @@ class MessageController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of the messages.
+     * @OA\Get(
+     *               path="/api/tg-construct/message",
+     *               operationId="message/index",
+     *               tags={"Сообщения"},
+     *               description="Все сообщения",
+     *                  security = {
+     *                 {"apiKey": {}},
+     *                },
+     *          @OA\Parameter(
+     *             name="bot_id",
+     *             description="bot_id",
+     *             required=true,
+     *             in="query",
+     *              @OA\Schema(
+     *                 type="integer",
+     *             ),
+     *         ),
+     *               @OA\Response(response="200",
+     *                    description="",
+     *                    @OA\MediaType(
+     *                        mediaType="application/json",
+     *                        @OA\Schema(
+     *                        ),
+     *                    ),
+     *                ),
+     *           )
      */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        return $this->messageApiService->showAll();
+        $validated = $request->validate([
+            'bot_id' => 'required|exists:bots,id',
+        ]);
+        return $this->messageApiService->showAll($validated['bot_id']);
     }
 
     /**
@@ -52,6 +82,10 @@ class MessageController extends Controller
      *                              property="name",
      *                              type="string"
      *                          ),
+     *                          @OA\Property(
+     *                              property="wait_input",
+     *                              type="string"
+     *                          ),
      *                         @OA\Property(
      *                               property="`next_message_id`",
      *                               type="integer"
@@ -70,6 +104,7 @@ class MessageController extends Controller
      *                           "bot_id": 1,
      *                           "text": "Добро пожаловать",
      *                           "type": "message",
+     *                           "wait_input": "message",
      *                           "name": "Стартовое сообщение",
      *                           "next_message_id": 1,
      *                           "attachment_id": 1,
@@ -92,9 +127,10 @@ class MessageController extends Controller
     {
         $validated = $request->validate([
             'text' => 'required|string',
-            'type' => 'required|string',
+            'type' => 'required|string|in:question,message',
             'name' => 'required|string',
             'bot_id' => 'required|exists:bots,id',
+            'wait_input' => 'required_if:type,question|string',
             'attachment_id' => 'nullable|exists:tg_construct_attachments,id',
             'buttons'=>'array|nullable',
             'buttons.*.text'=>'required|string',
@@ -232,5 +268,10 @@ class MessageController extends Controller
     {
         return $this->messageApiService->destroy($id);
 
+    }
+
+    public function getAllowedUsersInputs()
+    {
+        return ValidationService::getAllowedUsersInputs();
     }
 }

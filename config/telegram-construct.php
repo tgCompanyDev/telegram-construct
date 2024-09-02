@@ -2,6 +2,7 @@
 
 return [
     'param' => env('EXAMPLE_PARAM', 100),
-//    'provider' => \Valibool\TelegramConstruct\Providers\TelegramConstructServiceProvider::class,
-
+    'models_to_users_inputs' => [
+        "TgUser" => \Valibool\TelegramConstruct\Models\TgUser::class,
+    ],
 ];

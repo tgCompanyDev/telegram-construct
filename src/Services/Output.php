@@ -13,13 +13,35 @@ use Valibool\TelegramConstruct\Models\File\TgConstructAttachment;
 class Output
 {
 
-    public SDKKeyboard $keyboard;
-    public Api $client;
-    public string $messageText;
-    public string $chatId;
+    private SDKKeyboard $keyboard;
+    private Api $client;
+    private string $messageText;
+    private string $chatId;
     private ?TgConstructAttachment $photo = null;
 
+    /**
+     * @param $customButtons
+     * @return SDKKeyboard
+     */
+    public function setCustomKeyboard($customButtons): SDKKeyboard
+    {
+        $buttons = [];
+        $keyboard = new SDKKeyboard(['resize_keyboard' => true, 'one_time_keyboard' => true]);
+        $keyboard->inline();
+        foreach ($customButtons as $button) {
+            if (isset($button['callback_data'])) {
+                $buttons[] = SDKKeyboard::inlineButton(['text' => $button['text'], 'callback_data' => $button['callback_data']]);
+            }
+        }
 
+        $keyboard->row($buttons);
+
+        return $this->keyboard = $keyboard;
+    }
+    /**
+     * @param SDKKeyboard $keyboard
+     * @return SDKKeyboard
+     */
     public function setKeyboard(SDKKeyboard $keyboard): SDKKeyboard
     {
         return $this->keyboard = $keyboard;
@@ -79,7 +101,7 @@ class Output
         return $this->client->sendMessage([
             'chat_id' => $this->chatId,
             'text' => $this->messageText,
-            'reply_markup' => $this->keyboard
+            'reply_markup' => $this->keyboard ?? false
         ]);
     }
 
@@ -109,14 +131,14 @@ class Output
     }
 
 
-//    public static function sendMessage($telegram, $text, $keyboard, $chatId): mixed
-//    {
-//        return $telegram->sendMessage([
-//            'chat_id' => $chatId,
-//            'text' => $text,
-//            'reply_markup' => $keyboard
-//        ]);
-//    }
+    public static function sendFreeMessage($telegram, $text, $keyboard, $chatId)
+    {
+        return $telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => $text,
+            'reply_markup' => $keyboard
+        ]);
+    }
 
 //    public static function sendPhoto($telegram, $text, $keyboard, $chatId, $photo): mixed
 //    {
