@@ -185,7 +185,7 @@ class MessageController extends Controller
      *                             type="string"
      *                         ),
      *                        @OA\Property(
-         *                              property="`next_message_id`",
+     *                              property="`next_message_id`",
      *                              type="integer"
      *                          ),
      *                           @OA\Property(
@@ -270,6 +270,26 @@ class MessageController extends Controller
 
     }
 
+    /**
+     * @return JsonResponse
+     * @OA\Get(
+     *                path="/api/tg-construct/allowed-users-inputs",
+     *                operationId="message/allowed-users-inputs",
+     *                tags={"Сообщения"},
+     *                description="Список ожидаемых полей для Мессаджа типа question для записи в базу через телеграмм",
+     *                   security = {
+     *                  {"apiKey": {}},
+     *                 },
+     *                @OA\Response(response="200",
+     *                     description="",
+     *                     @OA\MediaType(
+     *                         mediaType="application/json",
+     *                         @OA\Schema(
+     *                         ),
+     *                     ),
+     *                 ),
+     *            )
+     */
     public function getAllowedUsersInputs()
     {
         return ValidationService::getAllowedUsersInputs();
