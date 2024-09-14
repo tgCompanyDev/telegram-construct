@@ -8,7 +8,7 @@ use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Valibool\TelegramConstruct\Http\Resources\BotResource;
 use Valibool\TelegramConstruct\Models\Bot;
-use Valibool\TelegramConstruct\Services\MessageConstructService;
+use Valibool\TelegramConstruct\Services\Messages\MessageConstructor;
 use Valibool\TelegramConstruct\Services\Response\ResponseService;
 use Valibool\TelegramConstruct\Services\TelegramCommands;
 
@@ -39,7 +39,7 @@ class BotApiService
 //            $data['user_id'] = Auth::id();
             $data['user_id'] = 1;
             if ($bot = Bot::create($data)) {
-                MessageConstructService::createStartDefaultMessage($bot);
+                MessageConstructor::createStartDefaultMessage($bot);
                 return ResponseService::success(new BotResource($bot));
             }
             return ResponseService::unSuccess();

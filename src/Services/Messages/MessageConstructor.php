@@ -4,6 +4,7 @@ namespace Valibool\TelegramConstruct\Services\Messages;
 
 use Illuminate\Support\Facades\Storage;
 use Valibool\TelegramConstruct\Models\Bot;
+use Valibool\TelegramConstruct\Models\Message as MessageModel;
 use Valibool\TelegramConstruct\Services\Messages\Output\Output;
 use Valibool\TelegramConstruct\Services\Messages\Output\OutputButtons;
 use Valibool\TelegramConstruct\Services\Messages\Output\OutputMessage;
@@ -112,4 +113,17 @@ class MessageConstructor
         return $keyboard;
     }
 
+    /**
+     * @param Bot $bot
+     * @return MessageModel
+     */
+    public static function createStartDefaultMessage(Bot $bot) : MessageModel
+    {
+        return MessageModel::create([
+            'bot_id' => $bot->id,
+            'name' => 'Стартовое сообщение',
+            'text' => 'Добро пожаловать',
+            'first_message' => true,
+        ]);
+    }
 }
