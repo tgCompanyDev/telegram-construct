@@ -22,12 +22,6 @@ return new class extends Migration
                 ->on('bots')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->unsignedInteger('attachment_id')->nullable();
-            $table->foreign('attachment_id')
-                ->references('id')
-                ->on('tg_construct_attachments')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
             $table->timestamps();
         });
     }

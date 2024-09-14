@@ -18,6 +18,7 @@ use Valibool\TelegramConstruct\Http\Controllers\UploadFileController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
 Route::post('/telegram-input', [TelegramConstructController::class, 'input']);
 
 Route::prefix('api/bot/')->group(function () {
@@ -30,12 +31,10 @@ Route::prefix('api/tg-construct/')->group(function () {
     Route::apiResource('post', PostController::class);
     Route::post('upload-image', [UploadFileController::class, 'loadImage']);
     Route::get('allowed-users-inputs', [MessageController::class, 'getAllowedUsersInputs']);
-
 });
 
 Route::prefix('api/tg-server-client/')->group(function () {
-    Route::match(['get', 'post'],'auth', [TelegramServerClientController::class, 'auth']);
+    Route::match(['get', 'post'], 'auth', [TelegramServerClientController::class, 'auth']);
     Route::get('logout', [TelegramServerClientController::class, 'logout']);
     Route::get('get-message-views/{post_id}', [TelegramServerClientController::class, 'getMessageViews']);
 });
-

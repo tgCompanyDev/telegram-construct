@@ -7,6 +7,7 @@ use Valibool\TelegramConstruct\Models\Relation\SyncableModel;
 
 class Keyboard extends SyncableModel
 {
+
     protected $fillable = [
         'name',
         'message_id',

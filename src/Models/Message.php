@@ -7,15 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Valibool\TelegramConstruct\Models\File\TgConstructAttachment;
+use Valibool\TelegramConstruct\Models\File\Traits\Attachable;
 
 class Message extends Model
 {
+    use Attachable;
 
     protected $fillable = [
         'text',
         'bot_id',
         'name',
-        'attachment_id',
         'first_message',
         'type',
         'next_message_id',
@@ -34,11 +35,6 @@ class Message extends Model
         'modelMessage' => 'Из модели',
     ];
     protected $with = ['keyboard'];
-
-    public function image()
-    {
-        return $this->hasOne(TgConstructAttachment::class, 'id', 'attachment_id');
-    }
 
     /**
      * @return HasOne
@@ -69,18 +65,7 @@ class Message extends Model
      */
     public function buttons(): HasManyThrough
     {
-        return $this->hasManyThrough(Button::class,Keyboard::class)->orderBy('id');
-    }
-
-    /**
-     * @return bool
-     */
-    public function canSendNextMessage() : bool
-    {
-        if($this->buttons->count() || !$this->nextMessage || $this->need_confirmation){
-            return false;
-        }
-        return true;
+        return $this->hasManyThrough(Button::class, Keyboard::class)->orderBy('id');
     }
 
 }

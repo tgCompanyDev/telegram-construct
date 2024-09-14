@@ -13,13 +13,11 @@ class TgUser extends Model
         'name',
         'last_message_id',
         'last_tg_message_id',
+        'last_tg_media_group_messages_ids',
         'phone',
         'tg_user_id',
         'tg_user_name',
     ];
-
-    public static string $modelName = "Клиенты";
-
     /**
      * Array for tgUsers question answer to save in DB
      * @var array|array[]
@@ -27,20 +25,24 @@ class TgUser extends Model
     public static array $fieldsToChangeByUser = [
         'email' => [
             "title" => "Емэйл",
-            'validator' => 'string|unique:tg_users|email|max:255',
+            'rule' => 'string|unique:tg_users|email|max:255',
             'errorMessage' => 'Некорректный или уже существующий емэйл'
         ],
         'name' => [
             "title" => "Имя и фамилия",
-            'validator' => 'string|max:255',
+            'rule' => 'string|max:255',
             'errorMessage' => 'Максимальная длина 255 символов'
 
         ],
         'phone' => [
             "title" => "Телефон",
-            'validator' => 'numeric|unique:tg_users',
+            'rule' => 'numeric|unique:tg_users',
             'errorMessage' => 'Некорректный телефон/ телефон уже существует'
         ],
+    ];
+
+    protected $casts = [
+        'last_tg_media_group_messages_ids' => 'array'
     ];
 
     /**
@@ -71,15 +73,34 @@ class TgUser extends Model
     }
 
     /**
-     * @param Message $message
-     * @param string $lastTgMessageId
+     * @param int $messageId
+     * @param string|array $lastTgMessageId
      * @return bool
      */
-    public function saveLastMessage(Message $message, string $lastTgMessageId): bool
+    public function saveLastMessage(int $messageId, string|array $lastTgMessageId): bool
     {
-        $this->last_message_id = $message->id;
-        $this->last_tg_message_id = $lastTgMessageId;
+        if (is_array($lastTgMessageId)) {
+            $this->last_tg_media_group_messages_ids = $lastTgMessageId;
+        } else {
+            $this->last_tg_message_id = $lastTgMessageId;
+        }
+        $this->last_message_id = $messageId;
+
         return $this->save();
+    }
+
+    /**
+     * @return void
+     */
+    public function confirmLastInput(): void
+    {
+        if($this->waitConfirmation){
+            $lastInput = $this->waitConfirmation->input;
+            $field = $this->lastQuestion->wait_input;
+            $this->{$field} = $lastInput;
+            $this->save();
+            $this->waitConfirmation()->delete();
+        }
     }
 
 }

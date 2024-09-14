@@ -15,11 +15,5 @@ class Post extends Model
         'bot_id',
         'attachment_id',
     ];
-
-    public function image()
-    {
-        return $this->hasOne(TgConstructAttachment::class, 'id', 'attachment_id');
-    }
-
 }
 

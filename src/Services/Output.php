@@ -74,7 +74,7 @@ class Output
         return $this->chatId = $chatId;
     }
 
-    public function setPhoto(TgConstructAttachment $photo): string
+    public function setPhoto(TgConstructAttachment|string $photo): string
     {
         return $this->photo = $photo;
     }
@@ -122,6 +122,12 @@ class Output
     {
         $file = InputFile::create(Storage::getConfig()['root'] . '/' . $this->photo->disk . '/' . $this->photo->physicalPath(), $this->photo->name);
 
+        return $this->client->sendMediaGroup([
+            'chat_id' => $this->chatId,
+            'photo' => $file,
+            'caption' => $this->messageText,
+            'reply_markup' => $this->keyboard
+        ]);
         return $this->client->sendPhoto([
             'chat_id' => $this->chatId,
             'photo' => $file,

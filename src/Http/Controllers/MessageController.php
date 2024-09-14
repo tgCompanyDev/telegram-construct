@@ -4,6 +4,8 @@ namespace Valibool\TelegramConstruct\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Valibool\TelegramConstruct\Models\Message;
 use Valibool\TelegramConstruct\Services\API\MessageApiService;
 use Valibool\TelegramConstruct\Services\ValidationService;
 
@@ -107,7 +109,7 @@ class MessageController extends Controller
      *                           "wait_input": "message",
      *                           "name": "Стартовое сообщение",
      *                           "next_message_id": 1,
-     *                           "attachment_id": 1,
+     *                           "attachments": {"0":1,"1":2},
      *                            "buttons": {"0":{"text":"button1","callback_data":2}},
      *                         }
      *                     )
@@ -131,7 +133,8 @@ class MessageController extends Controller
             'name' => 'required|string',
             'bot_id' => 'required|exists:bots,id',
             'wait_input' => 'required_if:type,question|string',
-            'attachment_id' => 'nullable|exists:tg_construct_attachments,id',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'required_with:attachments|exists:tg_construct_attachments,id',
             'buttons'=>'array|nullable',
             'buttons.*.text'=>'required|string',
             'buttons.*.callback_data'=>'nullable|exists:messages,id',
@@ -189,8 +192,8 @@ class MessageController extends Controller
      *                              type="integer"
      *                          ),
      *                           @OA\Property(
-     *                              property="attachment_id",
-     *                              type="integer"
+     *                              property="images",
+     *                              type="json"
      *                          ),
      *
      *                      @OA\Property(
@@ -203,7 +206,8 @@ class MessageController extends Controller
      *                          "type": "message",
      *                          "name": "Стартовое сообщение",
      *                          "next_message_id": 1,
-     *                          "attachment_id": 1,
+     *                           "attachments": {"0":1,"1":2},
+     *                           "images": {"0":{"text":"button1","callback_data":2}},
      *                           "buttons": {"0":{"text":"button1","callback_data":2}},
      *                        }
      *                    )
@@ -226,7 +230,8 @@ class MessageController extends Controller
             'type' => 'required|string',
             'name' => 'required|string',
             'next_message_id' => 'nullable|exists:messages,id',
-            'attachment_id' => 'nullable|exists:tg_construct_attachments,id',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'required_with:attachments|exists:tg_construct_attachments,id',
             'buttons'=>'array|nullable',
             'buttons.*.text'=>'required|string',
             'buttons.*.callback_data'=>'nullable|exists:messages,id',
@@ -293,5 +298,17 @@ class MessageController extends Controller
     public function getAllowedUsersInputs()
     {
         return ValidationService::getAllowedUsersInputs();
+    }
+
+    public function constructMessagesForms(Request $request)
+    {
+        if(Auth::user()){
+            $messages = Message::all()->sortBy('id');
+            return view('messages',['messages'=>$messages]);
+        }
+        return view('auth');
+
+
+
     }
 }

@@ -19,8 +19,7 @@ class MessageResource extends JsonResource
             "wait_input" => $this->wait_input,
             "need_confirmation" => $this->need_confirmation,
             "next_message_id" => $this->next_message_id,
-            "image" => $this->image? $this->image->url : null,
-            "attachment_id" => $this->attachment_id,
+            "attachments" => $this->attachment? TGAttachmentResource::collection($this->attachment): null,
             "buttons" => MessageButtonsResource::collection($this->buttons),
         ];
     }

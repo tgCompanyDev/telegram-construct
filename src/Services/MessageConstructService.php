@@ -7,12 +7,12 @@ use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Keyboard\Keyboard as SDKKeyboard;
 use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Models\Message;
-
+use Valibool\TelegramConstruct\Services\Messages\Message as MessageBase;
 class MessageConstructService
 {
     private Api $telegram;
     private string $chatId;
-    public Message $outputMessage;
+    public MessageBase $outputMessage;
     private Bot $bot;
     private string $lastTgMessageId;
 
@@ -37,24 +37,25 @@ class MessageConstructService
     }
 
     /**
-     * @param $message
      * @return void
      */
     private function setInlineKeyboardByMessage(): void
     {
-        if ($this->outputMessage->buttons) {
+        $outputMessageButtons = $this->outputMessage->buttons;
+
+        if ($outputMessageButtons->count()) {
             $buttons = [];
             $countInRow = 1;
             $i=0;
 
             $keyboard = new SDKKeyboard([
-                'resize_keyboard' => $this->outputMessage->keyboard->resize_keyboard ?? true,
-                'one_time_keyboard' => $this->outputMessage->keyboard->one_time_keyboard ?? true
+                'resize_keyboard' => $outputMessageButtons->resize_keyboard ?? true,
+                'one_time_keyboard' => $outputMessageButtons->one_time_keyboard ?? true
             ]);
 
             $keyboard->inline();
 
-            foreach ($this->outputMessage->buttons as $button) {
+            foreach ($outputMessageButtons as $button) {
                 if (isset($button['callback_data'])) {
                     $buttons[] = SDKKeyboard::inlineButton(['text' => $button['text'], 'callback_data' => $button['callback_data']]);
                 }
@@ -66,84 +67,18 @@ class MessageConstructService
                     $i++;
                 }
             }
-//            $keyboard->row($buttons);
             $this->output->setKeyboard($keyboard);
         }
-    }
-    private function setReplyKeyboardByMessage(): void
-    {
-        $countInRow = 3;
-        $rows = [];
-        $buttons = [];
-        $i=1;
-        foreach ($this->outputMessage->buttons as $button) {
-
-            $buttons[] = SDKKeyboard::button($button['text']);
-
-            if($i==$countInRow){
-                $i=0;
-            } else {
-                $rows[] = $buttons;
-                $i++;
-            }
-        }
-        dd($rows);
-
-//        $keyboard = SDKKeyboard::make()
-//            ->setResizeKeyboard(true)
-//            ->setOneTimeKeyboard(true)
-//            ->row([
-//                SDKKeyboard::button('1'),
-//                SDKKeyboard::button('2'),
-//                SDKKeyboard::button('3'),
-//                SDKKeyboard::button('4'),
-//                SDKKeyboard::button('5'),
-//                SDKKeyboard::button('6'),
-//                SDKKeyboard::button('7'),
-//                SDKKeyboard::button('8'),
-//                SDKKeyboard::button('9'),
-//            ]);
-//            ->row([
-//                SDKKeyboard::button('4'),
-//                SDKKeyboard::button('5'),
-//                SDKKeyboard::button('6'),
-//            ])
-//            ->row([
-//                SDKKeyboard::button('7'),
-//                SDKKeyboard::button('8'),
-//                SDKKeyboard::button('9'),
-//            ])
-//            ->row([
-//                SDKKeyboard::button('0'),
-//            ]);
-//        if ($this->outputMessage->buttons) {
-//            $buttons = [];
-//
-//            $keyboard = new SDKKeyboard([
-//                'resize_keyboard' => $this->outputMessage->keyboard->resize_keyboard,
-//                'one_time_keyboard' => $this->outputMessage->keyboard->one_time_keyboard
-//            ]);
-//
-//            dd
-//            $keyboard->inline();
-//
-//            foreach ($this->outputMessage->buttons as $button) {
-//                if (isset($button['callback_data'])) {
-//                    $buttons[] = SDKKeyboard::inlineButton(['text' => $button['text'], 'callback_data' => $button['callback_data']]);
-//                }
-//            }
-//            $keyboard->row($buttons);
-//
-            $this->output->setKeyboard($keyboard);
-//        }
     }
 
     /**
-     * @param $message
+     * Set the message text to the output object.
+     *
      * @return void
      */
     private function setMessageText(): void
     {
+        // Set the message text to the output object
         $this->output->setMessageText($this->outputMessage->text);
     }
 
@@ -160,7 +95,7 @@ class MessageConstructService
      */
     private function setPhoto(): void
     {
-        if ($this->outputMessage->image) {
+        if ($image = $this->outputMessage->image) {
             $this->output->setPhoto($this->outputMessage->image);
         }
     }
@@ -187,11 +122,8 @@ class MessageConstructService
         return $this->output->sendMessage();
     }
 
-    /**
-     * @param Message $message
-     * @return Output
-     */
-    public function setOutputMessage(Message $message): Output
+
+    public function setOutputMessage(MessageBase $message): Output
     {
         $this->outputMessage = $message;
         $this->constructOutputMessage();

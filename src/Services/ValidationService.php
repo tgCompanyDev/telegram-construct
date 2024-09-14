@@ -4,14 +4,15 @@ namespace Valibool\TelegramConstruct\Services;
 
 use Illuminate\Support\Facades\Validator;
 
-use Valibool\TelegramConstruct\Models\Message;
 use Valibool\TelegramConstruct\Models\TgUser;
 use Valibool\TelegramConstruct\Models\UsersConfirmation;
+use Valibool\TelegramConstruct\Services\Messages\MessageConfirmation;
+use Valibool\TelegramConstruct\Services\Messages\MessageValidation;
 use Valibool\TelegramConstruct\Services\Response\ResponseService;
 
 class ValidationService
 {
-    private Message $errorMessage;
+    private MessageValidation $errorMessage;
 
 
     public static function getAllowedUsersInputs()
@@ -58,10 +59,7 @@ class ValidationService
             $validatorErrorMessages = $validator->messages();
             $validatorErrorText = $validatorErrorMessages->first($field);
 
-            $this->errorMessage = new Message();
-            $this->errorMessage->text = $validatorErrorText;
-            $this->errorMessage->type = 'validation_error';
-
+            $this->errorMessage = new MessageValidation($validatorErrorText, 'validation_error');
         }
 
         return $validatorFails;
@@ -70,14 +68,13 @@ class ValidationService
     /**
      * @param $inputMessageText
      * @param $userId
-     * @return Message
+     * @return MessageConfirmation
      */
-    public function getConfirmationMessage(string $inputMessageText, TgUser $user): Message
+    public function getConfirmationMessage(string $inputMessageText, TgUser $user): MessageConfirmation
     {
-        $confirmationMessage = new Message();
         $confirmationMessage->text = "Подтвердите ввод: ".$inputMessageText.". Или введите заново.";
         $confirmationMessage->type = 'confirmation';
-        $confirmationButtons = [
+        $confirmationButtons = collect([
             [
                 'text' => 'Подтверждаю',
                 'callback_data' => 'confirmation_true',
@@ -86,9 +83,9 @@ class ValidationService
                 'text' => 'Пропустить',
                 'callback_data' => 'skip',
             ],
-        ];
+        ]);
 
-        $confirmationMessage->buttons = $confirmationButtons;
+        $confirmationMessage = new MessageConfirmation($confirmationMessage->text, $confirmationButtons);
 
         if ($userConfirmations = UsersConfirmation::where('tg_user_id', $user->id)->first()) {
             $userConfirmations->update([
@@ -105,9 +102,9 @@ class ValidationService
     }
 
     /**
-     * @return Message
+     * @return MessageValidation
      */
-    public function getValidationErrorMessage(): Message
+    public function getValidationErrorMessage(): MessageValidation
     {
         return $this->errorMessage;
     }

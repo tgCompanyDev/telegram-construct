@@ -26,22 +26,25 @@ return new class extends Migration
             $table->string('disk')->default('public');
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('group')->nullable();
+
             $table->timestamps();
         });
 
         Schema::create('tg_construct_attachmentable', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('attachmentable_type');
-            $table->unsignedInteger('attachmentable_id');
-            $table->unsignedInteger('attachment_id');
-
-            $table->index(['attachmentable_type', 'attachmentable_id']);
-
-            $table->foreign('attachment_id')
+            $table->string('tg_construct_attachmentable_type');
+            $table->unsignedInteger('tg_construct_attachmentable_id');
+            $table->unsignedInteger('tg_construct_attachment_id');
+//
+            $table->index(['tg_construct_attachmentable_type', 'tg_construct_attachmentable_id']);
+//
+            $table->foreign('tg_construct_attachment_id')
                 ->references('id')
                 ->on('tg_construct_attachments')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
+            $table->timestamps();
+
         });
     }
 

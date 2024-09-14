@@ -16,10 +16,7 @@ return new class extends Migration
             $table->mediumText('text')->nullable();
             $table->string('type')->default('message');
             $table->string('name')->nullable();
-//            $table->boolean('resize_keyboard')->default(true);
-//            $table->boolean('one_time_keyboard')->default(true);
             $table->boolean('first_message')->default(false);
-//            $table->jsonb('keyboard')->nullable();
             $table->string('wait_input')->nullable();
             $table->boolean('need_confirmation')->default(false);
             $table->unsignedInteger('bot_id')->nullable();
@@ -34,12 +31,6 @@ return new class extends Migration
                 ->on('messages')
                 ->onUpdate('cascade')
                 ->nullOnDelete();
-            $table->unsignedInteger('attachment_id')->nullable();
-            $table->foreign('attachment_id')
-                ->references('id')
-                ->on('tg_construct_attachments')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
             $table->timestamps();
         });
     }

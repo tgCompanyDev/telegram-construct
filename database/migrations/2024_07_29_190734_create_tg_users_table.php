@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->unsignedBigInteger('last_message_id')->nullable();
             $table->unsignedBigInteger('last_tg_message_id')->nullable();
+            $table->json('last_tg_media_group_messages_ids')->nullable();
             $table->unsignedBigInteger('phone')->nullable();
             $table->unsignedBigInteger('tg_user_id')->unique()->nullable();
             $table->string('tg_user_name')->nullable();

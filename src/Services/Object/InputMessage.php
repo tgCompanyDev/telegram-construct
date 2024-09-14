@@ -9,6 +9,9 @@ use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Models\Message;
 use Valibool\TelegramConstruct\Models\TgUser;
 use Valibool\TelegramConstruct\Services\MessageConstructService;
+use Valibool\TelegramConstruct\Services\Messages\MessageConfirmation;
+use Valibool\TelegramConstruct\Services\Messages\MessageDB;
+use Valibool\TelegramConstruct\Services\Messages\MessageValidation;
 use Valibool\TelegramConstruct\Services\Output;
 use Valibool\TelegramConstruct\Services\TgUserService;
 use Valibool\TelegramConstruct\Services\ValidationService;
@@ -46,11 +49,24 @@ class InputMessage
             return $this->messageService->setOutputMessage($outputMessage);
         }
         if ($this->user->lastQuestion) {
-            $outputMessage = $this->user->lastQuestion;
+            $this->lastMessageId = $this->user->lastQuestion->id;
+            $outputMessage = $this->createOutputMessage($this->user->lastQuestion);
         } else {
-            $outputMessage = $this->firstMessage;
+            $this->lastMessageId = $this->firstMessage->id;
+
+            $outputMessage = $this->createOutputMessage($this->firstMessage);
+
         }
         return $this->messageService->setOutputMessage($outputMessage);
+    }
+
+    /**
+     * @param Message $message
+     * @return MessageDB
+     */
+    public function createOutputMessage(Message $message) : MessageDB
+    {
+        return new MessageDB($message);
     }
 
     /**
@@ -60,9 +76,10 @@ class InputMessage
     public function sendAnswer(): \Telegram\Bot\Objects\Message
     {
         $answer = $this->messageService->sendMessage();
+        $outputMessageType = $this->messageService->outputMessage->type;
 
-        if ($this->messageService->outputMessage->type != 'confirmation' && $this->messageService->outputMessage->type != 'validation_error') {
-            $this->user->saveLastMessage($this->messageService->outputMessage, $answer->message_id);
+        if (!in_array($outputMessageType, ['confirmation','validation_error'])) {
+            $this->user->saveLastMessage($this->lastMessageId, $answer->message_id);
             if ($this->messageService->outputMessage->canSendNextMessage()) {
                 if ($nextMessageSent = $this->sendNextMessage()) {
                     $answer = $nextMessageSent;
@@ -91,8 +108,9 @@ class InputMessage
     public function sendNextMessage(): ?\Telegram\Bot\Objects\Message
     {
         if ($this->user->last_message_id) {
-            if ($nextMessage = Message::find($this->user->last_message_id)->nextMessage) {
-                $this->messageService->setOutputMessage($nextMessage);
+            if ($nextMessage = $this->user->lastQuestion->nextMessage) {
+                $outputMessage = $this->createOutputMessage($nextMessage);
+                $this->messageService->setOutputMessage($outputMessage);
                 return $this->sendAnswer();
             }
         }
@@ -108,9 +126,9 @@ class InputMessage
     }
 
     /**
-     * @return Message
+     * @return MessageValidation|MessageConfirmation
      */
-    private function validateErrorsInput(): Message
+    private function validateErrorsInput(): MessageValidation|MessageConfirmation
     {
         $validationService = new ValidationService();
 

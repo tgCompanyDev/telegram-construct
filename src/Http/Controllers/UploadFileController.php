@@ -7,9 +7,7 @@ use Valibool\TelegramConstruct\Services\File\FileUploader;
 
 class UploadFileController extends Controller
 {
-    public function __construct(protected FileUploader  $fileUploader)
-    {
-    }
+    public function __construct(protected FileUploader  $fileUploader) {}
 
     /**
      * @param int $message_id
@@ -18,7 +16,7 @@ class UploadFileController extends Controller
      */
     public function loadImage(Request $request)
     {
-        $validated = $request->validate([
+        $validated =  $request->validate([
             'image' => 'required|file|mimes:jpg,bmp,png|max:2800',
         ]);
 

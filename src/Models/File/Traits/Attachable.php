@@ -1,6 +1,6 @@
 <?php
+namespace Valibool\TelegramConstruct\Models\File\Traits;
 
-namespace App\Models\File\Traits;
 
 use App\Models\File\Attachment;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -24,8 +24,8 @@ trait Attachable
             TgConstructAttachment::class,
             'tg_construct_attachmentable',
             'tg_construct_attachmentable',
-            'attachmentable_id',
-            'attachment_id'
+            'tg_construct_attachmentable_id',
+            'tg_construct_attachment_id'
         );
 
         if ($group !== null) {
@@ -35,5 +35,4 @@ trait Attachable
         return $query
             ->orderBy('sort');
     }
-
 }

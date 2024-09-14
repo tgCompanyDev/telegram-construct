@@ -39,7 +39,7 @@ class InputCallbackQuery
        $outputMessage = $this->getOutputMessage();
         if($outputMessage){
             $this->lastTgMessageId = $this->user->last_tg_message_id;
-            $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot,);
+            $this->messageService = new MessageConstructService($this->telegram, $this->from['id'], $this->bot);
             $this->messageService->setLastTgMessageId($this->lastTgMessageId);
             return $this->messageService->setOutputMessage($outputMessage);
         }

@@ -47,13 +47,23 @@ class MessageApiService
      */
     public function store($messageParams): JsonResponse
     {
+        $attachments = null;
+        if(isset($messageParams['attachments'])){
+            $attachments = $messageParams['attachments'];
+            unset($messageParams['attachments']);
+        }
+
         if($messageParams['type'] == "question"){
             $messageParams['need_confirmation'] = true;
         }
+
         $newMessage = Message::create($messageParams);
         if(isset($messageParams['buttons'])){
             $keyboard = $newMessage->keyboard;
             $keyboard->buttons()->sync($messageParams['buttons']);
+        }
+        if(!is_null($attachments)){
+            $newMessage->attachment()->sync($attachments);
         }
         return ResponseService::success(
             new MessageResource($newMessage)
@@ -67,8 +77,17 @@ class MessageApiService
      */
     public function update(string $messageId, array $validated): JsonResponse
     {
+        $attachments = null;
+        if(isset($validated['attachments'])){
+            $attachments = $validated['attachments'];
+            unset($validated['attachments']);
+        }
         $message = Message::findOrFail($messageId);
         if ($message && $message->update($validated)) {
+
+            if(!is_null($attachments)){
+                $message->attachment()->sync($attachments);
+            }
             if(isset($validated['buttons'])){
                 $keyboard = $message->keyboard;
                 $keyboard->buttons()->sync($validated['buttons']);
@@ -91,10 +110,5 @@ class MessageApiService
             return ResponseService::unSuccess();
         }
         return ResponseService::notFound();
-    }
-
-    public function getAllowedUsersInputs()
-    {
-
     }
 }
