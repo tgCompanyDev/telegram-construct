@@ -3,7 +3,6 @@
 namespace Valibool\TelegramConstruct\Services\Messages\Output;
 
 use GuzzleHttp\Client;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Valibool\TelegramConstruct\Models\File\TgConstructAttachment;
 
@@ -60,6 +59,7 @@ abstract class Output
 
     public function sendTextMessage(string $chatId): self
     {
+
         $response = $this->client->get(
             self::TG_API_URL . $this->token . '/sendMessage',
             [
@@ -77,6 +77,43 @@ abstract class Output
         );
         $data = json_decode($response->getBody()->getContents(), true);
         $this->setResponse($data);
+
+        return $this;
+    }
+
+    public function deleteMessage(string $chatId, int $messageId): self
+    {
+        $response = $this->client->get(
+            self::TG_API_URL . $this->token . '/deleteMessage',
+            [
+                'http_errors' => false,
+                'query' => [
+                    'chat_id' => $chatId,
+                    'message_id' => $messageId,
+                ],
+                'verify' => false
+            ]
+        );
+
+        return $this;
+    }
+
+    public function deleteMessages(string $chatId, array $messageIds): self
+    {
+        $response = $this->client->get(
+            self::TG_API_URL . $this->token . '/deleteMessages',
+            [
+                'http_errors' => false,
+                'query' => [
+                    'chat_id' => $chatId,
+                    'message_ids' => $messageIds,
+                ],
+                'verify' => false
+            ]
+        );
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        dd($data);
 
         return $this;
     }

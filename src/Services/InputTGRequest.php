@@ -31,6 +31,7 @@ class InputTGRequest
     public function start(): bool
     {
         $this->setInputObject();
+
         if($this->answer = $this->generateAnswer()){
             $this->sendAnswer();
         }
@@ -44,8 +45,19 @@ class InputTGRequest
         $this->sendMessage();
     }
 
+    public function deleteLastMessage(): void
+    {
+        if($this->inputObject->user->last_tg_message_id){
+            $this->outputMessage->deleteMessage($this->inputObject->chatId, $this->inputObject->user->last_tg_message_id);
+        }
+    }
+
     public function sendMessage(): void
     {
+        if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
+            $this->deleteLastMessage();
+        }
+
         $result = $this->outputMessage->sendMessage($this->inputObject->chatId);
         if ($result->status){
             if ($result->message_id) {
@@ -87,29 +99,6 @@ class InputTGRequest
             'message' => new InputTextMessage($this->inputRequest),
             'callback_query' => new InputCallbackQuery($this->inputRequest),
         };
-
-
-//        switch ($this->updates->objectType()) {
-//            case 'callback_query':
-//                $this->inputObject = new InputCallbackQuery($this->telegram, $this->updates, $this->bot);
-//                if($this->inputObject->generateAnswer()){
-//                    $this->inputObject->deletePrevMessage();
-//                    $this->inputObject->sendAnswer();
-//                }
-//                break;
-//            case 'message':
-//                $this->inputObject = new InputTextMessage($this->telegram, $this->updates, $this->bot);
-//                if($this->inputObject->generateAnswer()) {
-//                    $this->inputObject->sendAnswer();
-//                }
-//                break;
-//            case 'my_chat_member':
-//                $this->inputObject = new ChatMember($this->telegram, $this->updates, $this->bot);
-//                $this->inputObject->checkChatMember();
-//                break;
-//            default:
-//                $this->inputObject = null;
-//        }
     }
 
     /**

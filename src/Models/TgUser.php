@@ -81,7 +81,10 @@ class TgUser extends Model
     {
         if (is_array($lastTgMessageId)) {
             $this->last_tg_media_group_messages_ids = $lastTgMessageId;
+            $this->last_tg_message_id = null;
+
         } else {
+            $this->last_tg_media_group_messages_ids = null;
             $this->last_tg_message_id = $lastTgMessageId;
         }
         $this->last_message_id = $messageId;
