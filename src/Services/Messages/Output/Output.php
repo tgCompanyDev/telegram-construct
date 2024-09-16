@@ -3,17 +3,21 @@
 namespace Valibool\TelegramConstruct\Services\Messages\Output;
 
 use GuzzleHttp\Client;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Valibool\TelegramConstruct\Models\File\TgConstructAttachment;
 
 abstract class Output
 {
+    public int|null $lastTgMessageId = null;
     protected string $token;
     protected string $text;
     protected array $mediaGroup = [];
     protected OutputButtons $buttons;
     private Client $client;
     public bool $status;
+    public bool $deletePrevMessage = false;
     public string|null $message_id = null;
     public TgConstructAttachment|null $photo = null;
     public array|null $mediaGroupMessagesIds = null;
@@ -57,26 +61,60 @@ abstract class Output
         return $this;
     }
 
+    public function asyncDeleteLastMessageAndSendNew(string $chatId, int $messageId, $queryToSend): self
+    {
+
+        $response = Http::pool(function (Pool $pool) use ($queryToSend, $chatId, $messageId) {
+            $pool->as('delete')->get(self::TG_API_URL . $this->token . '/deleteMessage', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+            ]);
+            $pool->as('newMessage')->get(self::TG_API_URL . $this->token . '/sendMessage',
+                $queryToSend['query']
+            );
+        });
+        $data =  json_decode($response['newMessage']->getBody()->getContents(),true);
+        $this->setResponse($data);
+
+        return $this;
+    }
     public function sendTextMessage(string $chatId): self
     {
 
-        $response = $this->client->get(
-            self::TG_API_URL . $this->token . '/sendMessage',
-            [
-                'http_errors' => false,
-                'query' => [
-                    'chat_id' => $chatId,
-                    'text' => $this->text,
-                    'parse_mode' => 'HTML',
+        $query = [
+            'http_errors' => false,
+            'query' => [
+                'chat_id' => $chatId,
+                'text' => $this->text,
+                'parse_mode' => 'HTML',
 //                    'parse_mode' => 'MarkdownV2',
-                    'items_in_row' => '1',
-                    'reply_markup' => $this->buttons->keyboard ?? null,
-                ],
-                'verify' => false
-            ]
-        );
-        $data = json_decode($response->getBody()->getContents(), true);
-        $this->setResponse($data);
+                'items_in_row' => '1',
+                'reply_markup' => $this->buttons->keyboard ?? null,
+            ],
+        ];
+
+        if($this->deletePrevMessage && $this->lastTgMessageId){
+            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId,$query );
+        } else {
+            $response = $this->client->get(
+                self::TG_API_URL . $this->token . '/sendMessage',
+                [
+                    'http_errors' => false,
+                    'query' => [
+                        'chat_id' => $chatId,
+                        'text' => $this->text,
+                        'parse_mode' => 'HTML',
+//                    'parse_mode' => 'MarkdownV2',
+                        'items_in_row' => '1',
+                        'reply_markup' => $this->buttons->keyboard ?? null,
+                    ],
+                    'verify' => false
+                ]
+            );
+            $data = json_decode($response->getBody()->getContents(), true);
+            $this->setResponse($data);
+
+        }
 
         return $this;
     }
@@ -113,11 +151,8 @@ abstract class Output
         );
         $data = json_decode($response->getBody()->getContents(), true);
 
-        dd($data);
-
         return $this;
     }
-
 
     public function sendPhoto($chatId): self
     {
@@ -143,7 +178,6 @@ abstract class Output
         $this->setResponse($data);
 
         return $this;
-
     }
 
     /**

@@ -45,20 +45,16 @@ class InputTGRequest
         $this->sendMessage();
     }
 
-    public function deleteLastMessage(): void
-    {
-        if($this->inputObject->user->last_tg_message_id){
-            $this->outputMessage->deleteMessage($this->inputObject->chatId, $this->inputObject->user->last_tg_message_id);
-        }
-    }
 
     public function sendMessage(): void
     {
         if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
-            $this->deleteLastMessage();
+            $this->outputMessage->lastTgMessageId = $this->inputObject->user->last_tg_message_id;
+            $this->outputMessage->deletePrevMessage = true;
         }
-
         $result = $this->outputMessage->sendMessage($this->inputObject->chatId);
+
+
         if ($result->status){
             if ($result->message_id) {
                 $this->saveLastMessage($result->message_id);
