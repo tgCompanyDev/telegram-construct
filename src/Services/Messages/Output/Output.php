@@ -65,13 +65,13 @@ abstract class Output
     {
 
         $response = Http::pool(function (Pool $pool) use ($queryToSend, $chatId, $messageId) {
+            $pool->as('newMessage')->get(self::TG_API_URL . $this->token . '/sendMessage',
+                $queryToSend['query']
+            );
             $pool->as('delete')->get(self::TG_API_URL . $this->token . '/deleteMessage', [
                 'chat_id' => $chatId,
                 'message_id' => $messageId,
             ]);
-            $pool->as('newMessage')->get(self::TG_API_URL . $this->token . '/sendMessage',
-                $queryToSend['query']
-            );
         });
         $data =  json_decode($response['newMessage']->getBody()->getContents(),true);
         $this->setResponse($data);
