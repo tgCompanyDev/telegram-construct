@@ -46,9 +46,10 @@ class MessageController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'bot_id' => 'required|exists:bots,id',
-        ]);
+//        $validated = $request->validate([
+//            'bot_id' => 'required|exists:bots,id',
+//        ]);
+        $validated['bot_id'] = 1;
         return $this->messageApiService->showAll($validated['bot_id']);
     }
 
@@ -131,14 +132,16 @@ class MessageController extends Controller
             'text' => 'required|string',
             'type' => 'required|string|in:question,message',
             'name' => 'required|string',
-            'bot_id' => 'required|exists:bots,id',
-            'wait_input' => 'required_if:type,question|string',
+//            'bot_id' => 'required|exists:bots,id',
+            'wait_input' => 'required_if:type,question|string|nullable',
             'attachments' => 'nullable|array',
             'attachments.*' => 'required_with:attachments|exists:tg_construct_attachments,id',
             'buttons'=>'array|nullable',
             'buttons.*.text'=>'required|string',
             'buttons.*.callback_data'=>'nullable|exists:messages,id',
         ]);
+        $validated['bot_id'] = 1;
+
         return $this->messageApiService->store($validated);
     }
 
