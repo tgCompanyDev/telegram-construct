@@ -17,7 +17,7 @@ class UploadFileController extends Controller
     public function loadImage(Request $request)
     {
         $validated =  $request->validate([
-            'image' => 'required|file|mimes:jpg,bmp,png|max:2800',
+            'image' => 'required|file|mimes:jpg,bmp,png,gif|max:2800',
         ]);
 
         return $this->fileUploader->loadImage($validated['image']);

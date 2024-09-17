@@ -21,6 +21,7 @@ class OutputMessage
     public bool $deletePrevMessage = false;
     public string|null $message_id = null;
     public array|null $photo = null;
+    public array|null $animation = null;
     public int|null $errorCode = null;
     public string|null $errorMessage = null;
     const TG_API_URL = 'https://api.telegram.org/bot';
@@ -71,13 +72,26 @@ class OutputMessage
         return $data;
     }
 
-    public function setAttachments($attachments): void
+    public function setAttachments($attachments): self
     {
         if ($attachments) {
             if ($attachments->count() >= 2) {
                 $this->mediaGroup = self::mediaGroupFormat($attachments, $this->text);
-            } else {
+                return $this;
+            }
+
+            if(self::formatMimeAttachment($attachments->first()['mime']) == 'animation')
+            {
+                $this->animation = $attachments->first();
+                return $this;
+
+            }
+
+            if(self::formatMimeAttachment($attachments->first()['mime']) == 'photo')
+            {
                 $this->photo = $attachments->first();
+                return $this;
+                
             }
         }
     }
@@ -89,6 +103,8 @@ class OutputMessage
 
         if ($this->photo)
             return $this->sendPhoto($chatId);
+        if ($this->animation)
+            return $this->sendAnimation($chatId);
 
         return $this->sendTextMessage($chatId);
 
@@ -98,6 +114,8 @@ class OutputMessage
     {
         switch ($mime) {
             case str_contains($mime, 'image'):
+                if(str_contains($mime, 'gif'))
+                    return 'animation';
                 return 'photo';
                 break;
             case str_contains($mime, 'video'):
@@ -118,22 +136,23 @@ class OutputMessage
         foreach ($attachments as $key => $attachment) {
 
             $type = self::formatMimeAttachment($attachment['mime']);
+            if (in_array($type,['photo','video','doc','audio'])) {
+                $fields[$key] = [
+                    'type' => $type,
+                    'media' => 'attach://' . $attachment['name'] . '.' . $attachment['extension'],
+                ];
 
-            $fields[$key] = [
-                'type' => $type,
-                'media' => 'attach://' . $attachment['name'] . '.' . $attachment['extension'],
-            ];
-
-            if ($message) {
-                if ($key === 0) {
-                    $fields[$key]['caption'] = $message;
+                if ($message) {
+                    if ($key === 0) {
+                        $fields[$key]['caption'] = $message;
+                    }
                 }
-            }
 
-            $files[] = [
-                'name' => $attachment['name'] . '.' . $attachment['extension'],
-                'contents' => fopen(Storage::getConfig()['root'] . '/' . $attachment['disk'] . '/' . $attachment['path'] . '/' . $attachment['name'] . '.' . $attachment['extension'], 'r')
-            ];
+                $files[] = [
+                    'name' => $attachment['name'] . '.' . $attachment['extension'],
+                    'contents' => fopen(Storage::getConfig()['root'] . '/' . $attachment['disk'] . '/' . $attachment['path'] . '/' . $attachment['name'] . '.' . $attachment['extension'], 'r')
+                ];
+            }
         }
         $mediaGroup[] = [
             'name' => 'media',
@@ -222,6 +241,32 @@ class OutputMessage
             $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendPhoto', $body);
         } else {
             $this->sendRequest('GET', 'sendPhoto', $body);
+        }
+
+        return $this;
+    }
+
+    public function sendAnimation($chatId): self
+    {
+        $body = [
+            'multipart' => [
+                [
+                    'name' => 'animation',
+                    'contents' => fopen(Storage::getConfig()['root'] . '/' . $this->animation['disk'] . '/' . $this->animation['path'] . '/' . $this->animation['name'] . '.' . $this->animation['extension'], 'r')
+                ],
+            ],
+            'http_errors' => false,
+            'query' => [
+                'chat_id' => $chatId,
+                'caption' => $this->text ?? null,
+                'reply_markup' => $this->buttons->keyboard ?? null,
+            ],
+            'verify' => false
+        ];
+        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendAnimation', $body);
+        } else {
+            $this->sendRequest('GET', 'sendAnimation', $body);
         }
 
         return $this;
