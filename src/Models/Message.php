@@ -25,9 +25,6 @@ class Message extends Model
         'keyboard_id',
     ];
 
-    protected $casts = [
-        'wait_input' => 'array'
-    ];
 
     public static array $types = [
         'message' => 'Текстовое сообщение',

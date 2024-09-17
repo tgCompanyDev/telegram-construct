@@ -77,16 +77,9 @@ class TgUser extends Model
      * @param string|array $lastTgMessageId
      * @return bool
      */
-    public function saveLastMessage(int $messageId, string|array $lastTgMessageId): bool
+    public function saveLastMessage(int $messageId, string $lastTgMessageId): bool
     {
-        if (is_array($lastTgMessageId)) {
-            $this->last_tg_media_group_messages_ids = $lastTgMessageId;
-            $this->last_tg_message_id = null;
-
-        } else {
-            $this->last_tg_media_group_messages_ids = null;
-            $this->last_tg_message_id = $lastTgMessageId;
-        }
+        $this->last_tg_message_id = $lastTgMessageId;
         $this->last_message_id = $messageId;
 
         return $this->save();

@@ -2,35 +2,87 @@
 
 namespace Valibool\TelegramConstruct\Services\Messages\Output;
 
-class OutputMessage extends Output
+use GuzzleHttp\Client;
+use GuzzleHttp\Promise;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Valibool\TelegramConstruct\Services\Messages\MessageConstructor;
+
+class OutputMessage
 {
-    public function __construct($token)
+    protected static string $token;
+    public int|null $lastTgMessageId = null;
+    protected string $text;
+    protected array $mediaGroup = [];
+    protected OutputButtons|null $keyboard;
+    public bool $status;
+    public bool $deletePrevMessage = false;
+    public string|null $message_id = null;
+    public array|null $photo = null;
+    public int|null $errorCode = null;
+    public string|null $errorMessage = null;
+    const TG_API_URL = 'https://api.telegram.org/bot';
+    private ?OutputButtons $buttons;
+
+    public function __construct(MessageConstructor $message, $token)
     {
-        $this->token = $token;
-        parent::__construct($token);
+        self::$token = $token;
+        self::$token = $token;
+        $this->text = $message->text;
+        $this->buttons = $message->buttons;
+        $this->setAttachments($message->attachments);
     }
 
-    public function setText(string $text): string
+    public static function client(): Client
     {
-        return $this->text = $text;
+        return new Client(['base_uri' => self::TG_API_URL . self::$token . '/']);
     }
 
-    public function setButtons(OutputButtons $buttons): self
+    public function sendRequest($method, $url, $body): array
     {
-        $this->buttons = $buttons;
-        return $this;
+        $response = self::client()->request($method, $url, $body);
+        $data = json_decode($response->getBody()->getContents(), true);
+        $this->setResponse($data);
+        return $data;
     }
 
-    public function setPhoto($photo)
+    public function sendAsyncRequest($params): array
     {
-        return $this->photo = $photo;
-    }
-    public function setMediaGroup(array $mediaGroup) : array
-    {
-        return $this->mediaGroup = $mediaGroup;
+        $promises = [];
+        $data = [];
+        foreach ($params as $key => $item) {
+            $request = new \GuzzleHttp\Psr7\Request($item['method'], $item['url']);
+
+            $promises[$key] = self::client()->sendAsync($request, $item['body']);
+
+        }
+        $results = \GuzzleHttp\Promise\Utils::settle($promises)->wait(true);
+
+        foreach ($results as $key => $result) {
+            if ($result['state'] != 'fulfilled' || !isset($result['value'])) {
+                continue;
+            }
+            $response = $result['value'];
+            $data[$key] = json_decode($response->getBody()->getContents(), true);
+        }
+
+        return $data;
     }
 
-    public function sendMessage(string $chatId) : self
+    public function setAttachments($attachments): void
+    {
+        if ($attachments) {
+            if ($attachments->count() >= 2) {
+                $this->mediaGroup = self::mediaGroupFormat($attachments, $this->text);
+            } else {
+                $this->photo = $attachments->first();
+            }
+        }
+    }
+
+    public function sendMessage(string $chatId): self
     {
         if ($this->mediaGroup)
             return $this->sendMediaGroup($chatId);
@@ -40,6 +92,168 @@ class OutputMessage extends Output
 
         return $this->sendTextMessage($chatId);
 
+    }
+
+    public static function formatMimeAttachment($mime): string
+    {
+        switch ($mime) {
+            case str_contains($mime, 'image'):
+                return 'photo';
+                break;
+            case str_contains($mime, 'video'):
+                return 'video';
+                break;
+        }
+    }
+
+    public static function mediaGroupFormat($attachments, string $message = null): array
+    {
+        if (!$attachments) {
+            return [];
+        }
+        $mediaGroup = [];
+        $fields = [];
+        $files = [];
+
+        foreach ($attachments as $key => $attachment) {
+
+            $type = self::formatMimeAttachment($attachment['mime']);
+
+            $fields[$key] = [
+                'type' => $type,
+                'media' => 'attach://' . $attachment['name'] . '.' . $attachment['extension'],
+            ];
+
+            if ($message) {
+                if ($key === 0) {
+                    $fields[$key]['caption'] = $message;
+                }
+            }
+
+            $files[] = [
+                'name' => $attachment['name'] . '.' . $attachment['extension'],
+                'contents' => fopen(Storage::getConfig()['root'] . '/' . $attachment['disk'] . '/' . $attachment['path'] . '/' . $attachment['name'] . '.' . $attachment['extension'], 'r')
+            ];
+        }
+        $mediaGroup[] = [
+            'name' => 'media',
+            'contents' => json_encode($fields),
+        ];
+
+        return array_merge($mediaGroup, $files);
+    }
+
+    public function sendMediaGroup(string $chatId): self
+    {
+        $body = [
+            "multipart" => $this->mediaGroup,
+            'http_errors' => false,
+            'query' => [
+                'chat_id' => $chatId,
+            ],
+            'verify' => false
+        ];
+
+        $this->sendRequest('GET', 'sendMediaGroup', $body);
+        return $this;
+    }
+
+    public function asyncDeleteLastMessageAndSendNew(string $chatId, int $messageId, string $command, $body): self
+    {
+        $requests = [
+            $command => [
+                'method' => 'GET',
+                'url' => $command,
+                'body' => $body,
+            ],
+            'deleteMessage' => [
+                'method' => 'GET',
+                'url' => 'deleteMessage',
+                'body' => ['query' => ['chat_id' => $chatId, 'message_id' => $messageId]],
+            ],
+        ];
+        $data = $this->sendAsyncRequest($requests);
+        $this->setResponse($data[$command]);
+
+
+        return $this;
+    }
+
+    public function sendTextMessage(string $chatId): self
+    {
+        $body = [
+            'http_errors' => false,
+            'query' => [
+                'chat_id' => $chatId,
+                'text' => $this->text,
+                'parse_mode' => 'HTML',
+//                    'parse_mode' => 'MarkdownV2',
+                'items_in_row' => '1',
+                'reply_markup' => $this->buttons->keyboard ?? null,
+            ],
+        ];
+        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendMessage', $body);
+        } else {
+
+            $result = $this->sendRequest('GET', 'sendMessage', $body);
+        }
+        return $this;
+    }
+
+    public function sendPhoto($chatId): self
+    {
+        $body = [
+            'multipart' => [
+                [
+                    'name' => 'photo',
+                    'contents' => fopen(Storage::getConfig()['root'] . '/' . $this->photo['disk'] . '/' . $this->photo['path'] . '/' . $this->photo['name'] . '.' . $this->photo['extension'], 'r')
+                ],
+            ],
+            'http_errors' => false,
+            'query' => [
+                'chat_id' => $chatId,
+                'caption' => $this->text ?? null,
+                'reply_markup' => $this->buttons->keyboard ?? null,
+            ],
+            'verify' => false
+        ];
+        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendPhoto', $body);
+        } else {
+            $this->sendRequest('GET', 'sendPhoto', $body);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    private function setResponse(array $data): void
+    {
+        $this->status = $data['ok'];
+        if (isset($data['error_code'])) {
+
+            $this->setErrorResponse($data['error_code'], $data['description']);
+
+        } else {
+            if (isset($data['result']['message_id'])) {
+                $this->message_id = $data['result']['message_id'];
+            }
+        }
+    }
+
+    /**
+     * @param $code
+     * @param $message
+     * @return void
+     */
+    private function setErrorResponse($code, $message): void
+    {
+        $this->errorCode = $code;
+        $this->errorMessage = $message;
     }
 
 

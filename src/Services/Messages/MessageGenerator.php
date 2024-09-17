@@ -49,9 +49,11 @@ class MessageGenerator
      */
     protected function checkValidation(): MessageValidation|MessageConfirmation|null
     {
+
         if($this->inputObject->type === 'confirmation'){
             return null;
         }
+
         if($this->inputObject->user->mustAnswer()){
             if ($this->inputObject->getValidateFail()) {
                 return $this->inputObject->getValidationErrorMessage();

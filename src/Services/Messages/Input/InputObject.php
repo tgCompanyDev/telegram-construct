@@ -53,7 +53,6 @@ abstract class InputObject implements ValidationFieldsInterface
     public function getValidateFail(): bool
     {
         if ($this->lastMessage && $this->lastMessage->wait_input) {
-
             $validationParams = TgUser::$fieldsToChangeByUser[$this->lastMessage->wait_input];
 
             return $this->validate(

@@ -2,6 +2,7 @@
 
 namespace Valibool\TelegramConstruct\Observers;
 
+use Illuminate\Support\Facades\Cache;
 use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Models\Button;
 use Valibool\TelegramConstruct\Models\Keyboard;
@@ -25,6 +26,8 @@ class MessageObserver
      */
     public function updated(Message $message): void
     {
+       Cache::tags(['answers'])->flush();
+
 //        if(($message->type != "modelMessage") && ($message->keyboard->model_class)){
 //            $message->keyboard->model_class = null;
 //            $message->keyboard->save();
@@ -41,6 +44,8 @@ class MessageObserver
             $button->callback_data = null;
             $button->save();
         }
+        Cache::tags(['answers'])->flush();
+
     }
 
     /**

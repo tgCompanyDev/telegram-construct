@@ -3,7 +3,8 @@
 namespace Valibool\TelegramConstruct\Services\Messages;
 
 
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
+use Valibool\TelegramConstruct\Models\File\TgConstructAttachment;
 use Valibool\TelegramConstruct\Models\Keyboard;
 
 class MessageConfirmation extends Message
@@ -12,34 +13,20 @@ class MessageConfirmation extends Message
     private string $inputText;
     public string $type = 'confirmation';
 
-    public function __construct(string|null $messageText, string $inputText)
+    public function __construct(string|null $text, string $inputText)
     {
         $this->inputText = $inputText;
 
-        $this->setText($messageText);
-        $this->setKeyboard();
-        $buttons = $this->getButtons();
-
-        parent::__construct($this->text, $this->type, $buttons);
-
-    }
-    public function setText($messageText): void
-    {
-        if ($messageText) {
-            $this->text = $messageText;
-        } else {
-            $this->defaultText();
+        if (!$text) {
+            $text = $this->defaultText();
         }
+        $this->setText($text);
+        $this->setType('confirmation');
+        $this->setKeyboard($this->createKeyboard());
+
     }
 
-    public function setKeyboard(): void
-    {
-        $this->keyboard = new Keyboard();
-        $this->keyboard->resize_keyboard = true;
-        $this->keyboard->one_time_keyboard = true;
-    }
-
-    public function getButtons(): Collection
+    public function generateButtons(): Collection
     {
         return new Collection([
             [
@@ -49,9 +36,41 @@ class MessageConfirmation extends Message
         ]);
     }
 
-    public function defaultText(): void
+    public function defaultText(): string
     {
-        $this->text = 'Подтвердите ввод: ' . $this->inputText . '. Или введите заново';
-
+        return 'Подтвердите ввод: ' . $this->inputText . '. Или введите заново';
     }
+
+    public function createKeyboard()
+    {
+        $keyboard = new Keyboard();
+        $keyboard->resize_keyboard = true;
+        $keyboard->one_time_keyboard = true;
+        $keyboard->buttons = $this->generateButtons();
+        return $keyboard;
+    }
+
+    public function setText(string $text): self
+    {
+        $this->text = $text;
+        return $this;
+    }
+
+    public function setKeyboard(Keyboard $keyboard): self
+    {
+        $this->keyboard = $keyboard;
+        return $this;
+    }
+
+    public function setAttachments(Collection|TgConstructAttachment|null $attachments): self
+    {
+        return $this;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+        return $this;
+    }
+
 }

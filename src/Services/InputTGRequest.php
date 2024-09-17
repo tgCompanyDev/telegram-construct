@@ -3,6 +3,7 @@
 namespace Valibool\TelegramConstruct\Services;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Services\Messages\Input\InputCallbackQuery;
 use Valibool\TelegramConstruct\Services\Messages\Input\InputTextMessage;
@@ -10,15 +11,15 @@ use Valibool\TelegramConstruct\Services\Messages\Message;
 use Valibool\TelegramConstruct\Services\Messages\MessageConstructor;
 use Valibool\TelegramConstruct\Services\Messages\MessageDB;
 use Valibool\TelegramConstruct\Services\Messages\MessageGenerator;
-use Valibool\TelegramConstruct\Services\Object\ChatMember;
+use Valibool\TelegramConstruct\Services\Messages\Output\OutputMessage;
 
 class InputTGRequest
 {
     private Bot $bot;
-    private InputTextMessage|InputCallbackQuery|ChatMember|null $inputObject;
+    private InputTextMessage|InputCallbackQuery|null $inputObject;
     private Request $inputRequest;
     private Message $answer;
-    private Messages\Output\Output $outputMessage;
+    private OutputMessage $outputMessage;
 
 
     public function __construct(Bot $bot, Request $request)
@@ -31,36 +32,42 @@ class InputTGRequest
     public function start(): bool
     {
         $this->setInputObject();
-
-        if($this->answer = $this->generateAnswer()){
-            $this->sendAnswer();
+        if ($this->inputObject){
+            if($this->answer = $this->generateAnswer()){
+                $this->sendAnswer();
+            }
         }
+
         return true;
     }
 
     public function sendAnswer(): void
     {
-        $messageConstructor = new MessageConstructor($this->answer, $this->bot);
-        $this->outputMessage = $messageConstructor->constructOutputMessage();
+        if($this->answer->needCacheMessage){
+            if(!$messageConstruct = Cache::tags(['answers'])->get($this->answer->messageId)){
+                $messageConstruct = new MessageConstructor($this->answer);
+                Cache::tags(['answers'])->put($this->answer->messageId, $messageConstruct);
+            }
+        } else {
+            $messageConstruct = new MessageConstructor($this->answer);
+        }
+
+        $this->outputMessage = new OutputMessage($messageConstruct, $this->bot->token);
         $this->sendMessage();
     }
 
 
     public function sendMessage(): void
     {
+
         if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
             $this->outputMessage->lastTgMessageId = $this->inputObject->user->last_tg_message_id;
             $this->outputMessage->deletePrevMessage = true;
         }
         $result = $this->outputMessage->sendMessage($this->inputObject->chatId);
-
-
         if ($result->status){
             if ($result->message_id) {
                 $this->saveLastMessage($result->message_id);
-            }
-            if($result->mediaGroupMessagesIds){
-                $this->saveLastMessage($result->mediaGroupMessagesIds);
             }
 
             if ($this->answer->canSendNextMessage()) {
@@ -74,12 +81,13 @@ class InputTGRequest
         $this->sendAnswer();
     }
 
-    public function saveLastMessage(int|array $tgMessageID): void
+    public function saveLastMessage(int $tgMessageID): void
     {
         if($this->answer->messageId){
             $this->inputObject->user->saveLastMessage($this->answer->messageId, $tgMessageID);
         }
     }
+
     public function generateAnswer(): Message
     {
         $messageGenerator = new MessageGenerator($this->inputObject, $this->bot);
@@ -94,6 +102,7 @@ class InputTGRequest
         $this->inputObject = match (self::getObjectType($this->inputRequest)) {
             'message' => new InputTextMessage($this->inputRequest),
             'callback_query' => new InputCallbackQuery($this->inputRequest),
+            'my_chat_member' => null,
         };
     }
 
