@@ -145,6 +145,7 @@ class OutputMessage
                 if ($message) {
                     if ($key === 0) {
                         $fields[$key]['caption'] = $message;
+                        $fields[$key]['parse_mode'] = 'HTML';
                     }
                 }
 
@@ -232,6 +233,7 @@ class OutputMessage
             'http_errors' => false,
             'query' => [
                 'chat_id' => $chatId,
+                'parse_mode' => 'HTML',
                 'caption' => $this->text ?? null,
                 'reply_markup' => $this->buttons->keyboard ?? null,
             ],
@@ -258,6 +260,7 @@ class OutputMessage
             'http_errors' => false,
             'query' => [
                 'chat_id' => $chatId,
+                'parse_mode' => 'HTML',
                 'caption' => $this->text ?? null,
                 'reply_markup' => $this->buttons->keyboard ?? null,
             ],
