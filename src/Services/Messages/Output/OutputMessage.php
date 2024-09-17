@@ -72,7 +72,7 @@ class OutputMessage
         return $data;
     }
 
-    public function setAttachments($attachments): self
+    public function setAttachments($attachments)
     {
         if ($attachments) {
             if ($attachments->count() >= 2) {
@@ -91,7 +91,7 @@ class OutputMessage
             {
                 $this->photo = $attachments->first();
                 return $this;
-                
+
             }
         }
     }
