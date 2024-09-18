@@ -64,6 +64,11 @@ class InputTGRequest
 
     public function sendMessage(): void
     {
+        if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
+            $this->outputMessage->deletePrevMessage = true;
+            $this->outputMessage->lastTgMessageId = $this->inputObject->user->last_tg_message_id;
+//            DeleteTGMessage::dispatch($this->bot->token,$this->inputObject->user->last_tg_message_id, $this->inputObject->chatId);
+        }
         $result = $this->outputMessage->sendMessage($this->inputObject->chatId);
         if ($result->status){
             if ($result->message_id) {

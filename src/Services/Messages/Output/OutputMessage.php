@@ -221,12 +221,12 @@ class OutputMessage
                 'reply_markup' => $this->buttons->keyboard ?? null,
             ],
         ];
-//        if ($this->deletePrevMessage && $this->lastTgMessageId) {
-//            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendMessage', $body);
-//        } else {
+        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendMessage', $body);
+        } else {
 
             $result = $this->sendRequest('GET', 'sendMessage', $body);
-//        }
+        }
         return $this;
     }
 
@@ -248,11 +248,11 @@ class OutputMessage
             ],
             'verify' => false
         ];
-//        if ($this->deletePrevMessage && $this->lastTgMessageId) {
-//            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendPhoto', $body);
-//        } else {
+        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendPhoto', $body);
+        } else {
             $this->sendRequest('GET', 'sendPhoto', $body);
-//        }
+        }
 
         return $this;
     }
@@ -275,11 +275,11 @@ class OutputMessage
             ],
             'verify' => false
         ];
-//        if ($this->deletePrevMessage && $this->lastTgMessageId) {
-//            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendAnimation', $body);
-//        } else {
+        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendAnimation', $body);
+        } else {
             $this->sendRequest('GET', 'sendAnimation', $body);
-//        }
+        }
 
         return $this;
     }
