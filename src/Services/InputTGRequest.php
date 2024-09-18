@@ -44,9 +44,9 @@ class InputTGRequest
 
     public function sendAnswer(): void
     {
-        if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
-            DeleteTGMessage::dispatch($this->bot->token,$this->inputObject->user->last_tg_message_id, $this->inputObject->chatId);
-        }
+//        if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
+//            DeleteTGMessage::dispatch($this->bot->token,$this->inputObject->user->last_tg_message_id, $this->inputObject->chatId);
+//        }
 
         if($this->answer->needCacheMessage){
             if(!$messageConstruct = Cache::tags(['answers'])->get($this->answer->messageId)){
