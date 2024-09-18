@@ -13,8 +13,9 @@ use Valibool\TelegramConstruct\Services\Messages\MessageConstructor;
 class OutputMessage
 {
     protected static string $token;
+    private static Client $client;
     public int|null $lastTgMessageId = null;
-    protected string $text;
+    protected string|null $text = null;
     protected array $mediaGroup = [];
     protected OutputButtons|null $keyboard;
     public bool $status;
@@ -25,25 +26,25 @@ class OutputMessage
     public int|null $errorCode = null;
     public string|null $errorMessage = null;
     const TG_API_URL = 'https://api.telegram.org/bot';
-    private ?OutputButtons $buttons;
+    private ?OutputButtons $buttons = null;
 
-    public function __construct(MessageConstructor $message, $token)
+    public function __construct($token, null|MessageConstructor $message = null)
     {
         self::$token = $token;
-        self::$token = $token;
-        $this->text = $message->text;
-        $this->buttons = $message->buttons;
-        $this->setAttachments($message->attachments);
+        self::$client = new Client(['base_uri' => self::TG_API_URL . self::$token . '/']);
+
+        if($message){
+            $this->text = $message->text;
+            $this->buttons = $message->buttons;
+            $this->setAttachments($message->attachments);
+        }
     }
 
-    public static function client(): Client
-    {
-        return new Client(['base_uri' => self::TG_API_URL . self::$token . '/']);
-    }
+
 
     public function sendRequest($method, $url, $body): array
     {
-        $response = self::client()->request($method, $url, $body);
+        $response = self::$client->request($method, $url, $body);
         $data = json_decode($response->getBody()->getContents(), true);
         $this->setResponse($data);
         return $data;
@@ -56,7 +57,7 @@ class OutputMessage
         foreach ($params as $key => $item) {
             $request = new \GuzzleHttp\Psr7\Request($item['method'], $item['url']);
 
-            $promises[$key] = self::client()->sendAsync($request, $item['body']);
+            $promises[$key] = self::$client->sendAsync($request, $item['body']);
 
         }
         $results = \GuzzleHttp\Promise\Utils::settle($promises)->wait(true);
@@ -198,7 +199,15 @@ class OutputMessage
 
         return $this;
     }
-
+    public function deleteMessage(string $chatId, int $messageId): array
+    {
+        $body = [
+            'http_errors' => false,
+            'query' => ['chat_id' => $chatId, 'message_id' => $messageId]
+        ];
+        $response = self::$client->request('GET', 'deleteMessage', $body);
+        return json_decode($response->getBody()->getContents(), true);
+    }
     public function sendTextMessage(string $chatId): self
     {
         $body = [
@@ -212,12 +221,12 @@ class OutputMessage
                 'reply_markup' => $this->buttons->keyboard ?? null,
             ],
         ];
-        if ($this->deletePrevMessage && $this->lastTgMessageId) {
-            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendMessage', $body);
-        } else {
+//        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+//            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendMessage', $body);
+//        } else {
 
             $result = $this->sendRequest('GET', 'sendMessage', $body);
-        }
+//        }
         return $this;
     }
 
@@ -239,11 +248,11 @@ class OutputMessage
             ],
             'verify' => false
         ];
-        if ($this->deletePrevMessage && $this->lastTgMessageId) {
-            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendPhoto', $body);
-        } else {
+//        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+//            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendPhoto', $body);
+//        } else {
             $this->sendRequest('GET', 'sendPhoto', $body);
-        }
+//        }
 
         return $this;
     }
@@ -266,11 +275,11 @@ class OutputMessage
             ],
             'verify' => false
         ];
-        if ($this->deletePrevMessage && $this->lastTgMessageId) {
-            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendAnimation', $body);
-        } else {
+//        if ($this->deletePrevMessage && $this->lastTgMessageId) {
+//            $this->asyncDeleteLastMessageAndSendNew($chatId, $this->lastTgMessageId, 'sendAnimation', $body);
+//        } else {
             $this->sendRequest('GET', 'sendAnimation', $body);
-        }
+//        }
 
         return $this;
     }

@@ -4,6 +4,7 @@ namespace Valibool\TelegramConstruct\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Valibool\TelegramConstruct\Jobs\DeleteTGMessage;
 use Valibool\TelegramConstruct\Models\Bot;
 use Valibool\TelegramConstruct\Services\Messages\Input\InputCallbackQuery;
 use Valibool\TelegramConstruct\Services\Messages\Input\InputTextMessage;
@@ -43,6 +44,10 @@ class InputTGRequest
 
     public function sendAnswer(): void
     {
+        if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
+            DeleteTGMessage::dispatch($this->bot->token,$this->inputObject->user->last_tg_message_id, $this->inputObject->chatId);
+        }
+
         if($this->answer->needCacheMessage){
             if(!$messageConstruct = Cache::tags(['answers'])->get($this->answer->messageId)){
                 $messageConstruct = new MessageConstructor($this->answer);
@@ -52,18 +57,13 @@ class InputTGRequest
             $messageConstruct = new MessageConstructor($this->answer);
         }
 
-        $this->outputMessage = new OutputMessage($messageConstruct, $this->bot->token);
+        $this->outputMessage = new OutputMessage($this->bot->token,$messageConstruct);
         $this->sendMessage();
     }
 
 
     public function sendMessage(): void
     {
-
-        if($this->inputObject->lastMessage && $this->inputObject->lastMessage->buttons->count()){
-            $this->outputMessage->lastTgMessageId = $this->inputObject->user->last_tg_message_id;
-            $this->outputMessage->deletePrevMessage = true;
-        }
         $result = $this->outputMessage->sendMessage($this->inputObject->chatId);
         if ($result->status){
             if ($result->message_id) {
